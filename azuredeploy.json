@@ -220,12 +220,6 @@
           "hcStorageAccountType":{
             "value":"[parameters('hcStorageAccountType')]"
           },
-          "hcPublicIPAddressName":{
-            "value":"[parameters('hcPublicIPAddressName')]"
-          },
-          "dnsNameForAnsiblePublicIP":{
-            "value":"[parameters('dnsNameForAnsiblePublicIP')]"
-          },
           "virtualNetworkName":{
             "value":"[parameters('virtualNetworkName')]"
           },
