@@ -99,7 +99,6 @@ function pull_compose()
   curl -fsSL "$REPO/docker/consul/docker-compose.yml" -o "${ADMIN_USER}/docker/consul/docker-compose.yml"
   chown -R  "${ADMIN_USER}" "${ADMIN_USER}/docker"
   docker-compose -f "${ADMIN_USER}/docker/consul/docker-compose.yml" up -d
-  chow
 }
 
 
