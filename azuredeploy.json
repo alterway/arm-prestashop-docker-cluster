@@ -15,7 +15,7 @@
       "metadata":{
         "description":"Username for the Ansible Control Virtual Machine"
       },
-      "defaultValue":"pr35745h0p"
+      "defaultValue":"devops"
     },
     "authenticationType":{
       "type":"string",
@@ -26,7 +26,7 @@
     },
     "adminPassword":{
       "type":"securestring",
-      "defaultValue":"",
+      "defaultValue":"changeme",
       "metadata":{
         "description":"Password for the Virtual Machine. Not used if authenticationType of sshPublicKey."
       }
@@ -146,7 +146,8 @@
       "type":"string",
       "metadata": {
         "description":"Deployment location"
-      }
+      },
+      "defaultValue":"northeurope"
     }
   },
   "variables":{
