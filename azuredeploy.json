@@ -22,7 +22,8 @@
       "allowedValues":[
         "password",
         "sshPublicKey"
-      ]
+      ],
+      "defaultValue":"sshPublicKey"
     },
     "adminPassword":{
       "type":"securestring",
