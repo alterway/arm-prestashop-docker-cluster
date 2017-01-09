@@ -138,6 +138,7 @@
     "customScriptDeployFile":"deploy.sh",
     "customScriptDeployUrl":"[concat(variables('scriptsBaseUrl'),variables('customScriptDeployFile'))]",
     "customScriptAnsibleCommand":"[concat('bash ',variables('customScriptDeployFile'))]",
+    "customScriptParameters":"[concat(parameters('adminUsername'))]",
     "osProfile_hc_password":{
       "computerName":"[parameters('hcVmName')]",
       "adminUsername":"[parameters('adminUsername')]",
@@ -218,7 +219,7 @@
           ]
         },
         "protectedSettings":{
-          "commandToExecute":"[concat(variables('customScriptAnsibleCommand'),' ')]"
+          "commandToExecute":"[concat(variables('customScriptAnsibleCommand'),' ',variables('customScriptParameters'))]"
         }
       }
     },

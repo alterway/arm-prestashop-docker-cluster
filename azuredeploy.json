@@ -274,9 +274,6 @@
           "hcStorageAccountName":{
             "value":"[parameters('hcStorageAccountName')]"
           },
-          "dnsNameForAnsiblePublicIP":{
-            "value":"[parameters('dnsNameForAnsiblePublicIP')]"
-          },
           "hcPublicIPAddressName":{
             "value":"[parameters('hcPublicIPAddressName')]"
           },
