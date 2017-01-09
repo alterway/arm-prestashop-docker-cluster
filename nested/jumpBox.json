@@ -138,7 +138,7 @@
     "customScriptDeployFile":"deploy.sh",
     "customScriptDeployUrl":"[concat(variables('scriptsBaseUrl'),variables('customScriptDeployFile'))]",
     "customScriptAnsibleCommand":"[concat('bash ',variables('customScriptDeployFile'))]",
-    "customScriptParameters":"[concat(parameters('adminUsername'))]",
+    "customScriptParameters":"[concat(parameters('adminUsername'),' \"',parameters('templatesBaseURL'),'\"')]",
     "osProfile_hc_password":{
       "computerName":"[parameters('hcVmName')]",
       "adminUsername":"[parameters('adminUsername')]",

@@ -79,7 +79,27 @@ function install_docker()
 
     usermod -aG docker "${ADMIN_USER}"
 
-    log "deploy Azure commander"
+}
+
+function install_docker_compose()
+{
+  curl -L "https://github.com/docker/compose/releases/download/1.9.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  chmod +x /usr/local/bin/docker-compose
+  docker-compose --version
+}
+
+function pull_images()
+{
+  docker pull herveleclerc/azure-commander
+}
+
+function pull_compose()
+{
+  mkdir -p "${ADMIN_USER}/docker/{consul,envconsul}"
+  curl -fsSL "$REPO/docker/consul/docker-compose.yml" -o "${ADMIN_USER}/docker/consul/docker-compose.yml"
+  chown -R  "${ADMIN_USER}" "${ADMIN_USER}/docker"
+  docker-compose -f "${ADMIN_USER}/docker/consul/docker-compose.yml" up -d
+  chow
 }
 
 
@@ -91,17 +111,26 @@ function generate_sshkeys()
 function fix_etc_hosts()
 {
   log "Add hostame and ip in hosts file ..."
-  IP=$(ip addr show eth0 | grep inet | grep -v inet6 | awk '{ print $2; }' | sed 's?/.*$??')
+  #IP=$(ip addr show eth0 | grep inet | grep -v inet6 | awk '{ print $2; }' | sed 's?/.*$??')
   HOST=$(hostname)
   echo "${IP}" "${HOST}" >>  "${HOST_FILE}"
 }
 
+function myip()
+{
+  IP=$(ip addr show eth0 | grep inet | grep -v inet6 | awk '{ print $2; }' | sed 's?/.*$??')
+  echo "${IP}"
+}
 
 log "Execution of Install Script from CustomScript ..."
 
 ## Variables
 
 ADMIN_USER="${1}"
+REPO="${2}"
+
+IP=$(myip)
+export IP
 
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 
@@ -114,6 +143,9 @@ fix_etc_hosts
 generate_sshkeys
 ssh_config
 install_docker
+install_docker_compose
+pull_images
+pull_compose
 
 log "Success : End of Execution of Install Script from CustomScript"
 
