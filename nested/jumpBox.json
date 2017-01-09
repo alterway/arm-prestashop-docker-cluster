@@ -1,0 +1,284 @@
+{
+  "$schema":"https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion":"1.0.0.0",
+  "parameters":{
+    "templatesBaseURL":{
+      "type":"string",
+      "metadata":{
+        "description":"Base template URL for nested template",
+        "artifactsBaseUrl":""
+      },
+      "defaultValue":"https://raw.githubusercontent.com/alterway/arm-prestashop-docker-cluster/master"
+    },
+    "adminUsername":{
+      "type":"string",
+      "metadata":{
+        "description":"Admin Username for the Vms"
+      },
+      "defaultValue":"pr35745h0p"
+    },
+    "adminPassword":{
+      "type":"string",
+      "metadata":{
+        "description":"Admin Password for the Vms"
+      },
+      "defaultValue":"pr35745h0p"
+    },
+    "sshKeyData":{
+      "type":"string",
+      "metadata":{
+        "description":"SSH RSA public key file as a string. Not used if authenticationType of password."
+      }
+    },
+    "authenticationType":{
+      "type":"string",
+      "allowedValues":[
+        "password",
+        "sshPublicKey"
+      ]
+    },
+    "hcStorageAccountName":{
+      "type":"string",
+      "metadata":{
+        "description":"Storage Account Name for JumpBox"
+      }
+    },
+    "hcPublicIPAddressName":{
+      "type":"string",
+      "defaultValue":"hcPublicIP",
+      "metadata":{
+        "description":"Public IP address Name for Jumpbox VM"
+      }
+    },
+    "virtualNetworkName":{
+      "type":"string",
+      "metadata":{
+        "description":"Virtual Network Name"
+      }
+    },
+    "hcSubnetName":{
+      "type":"string",
+      "metadata":{
+        "description":"Name of Jumpbox subnet"
+      }
+    },
+    "hcSubnetPrefix":{
+      "type":"string",
+      "metadata":{
+        "description":"Control VM Subnet Prefix"
+      }
+    },
+    "prestashop_firstname":{
+      "type":"string",
+      "metadata":{
+        "description":"Prestatshop Admin Firstname"
+      }
+    },
+    "prestashop_lastname":{
+      "type":"string",
+      "metadata":{
+        "description":"Prestatshop Admin Lastname"
+      }
+    },
+    "prestashop_email":{
+      "type":"string",
+      "metadata":{
+        "description":"Prestatshop Admin email"
+      }
+    },
+    "prestashop_password":{
+      "type":"securestring",
+      "metadata":{
+        "description":"Prestatshop Admin Password"
+      }
+    },
+    "hcVmSize":{
+      "type":"string",
+      "defaultValue":"Standard_DS1",
+      "metadata":{
+        "description":"Instance size for Ansible VM Control"
+      }
+    },
+    "hcVmName":{
+      "type":"string",
+      "metadata":{
+        "description":"JumpBox VM Name"
+      }
+    },
+    "shopSize":{
+      "type":"string",
+      "metadata":{
+        "description":"T-shirt size of the PrestaShop cluster"
+      }
+    },
+    "diagnosticsStorageAccountName":{
+      "type":"string",
+      "metadata":{
+        "description":"Storage Account Name for diags"
+      }
+    },
+    "location":{
+      "type":"string",
+      "metadata":{
+        "description":"Deployment location"
+      }
+    }
+  },
+  "variables":{
+    "hcVmStorageAccountContainerName":"vhds",
+    "hcNicName":"hcVnic",
+    "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
+    "hcSubnetRef":"[concat(variables('vnetID'),'/subnets/',parameters('hcSubnetName'))]",
+    "sshKeyPath":"[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
+    "imagePublisher":"Canonical",
+    "imageOffer":"UbuntuServer",
+    "ubuntuOSVersion":"16.04.0-LTS",
+    "hcOSDiskName":"hcosdisk",
+    "scriptsBaseUrl":"[concat(parameters('templatesBaseURL'),'/scripts/')]",
+    "customScriptDeployFile":"deploy.sh",
+    "customScriptDeployUrl":"[concat(variables('scriptsBaseUrl'),variables('customScriptDeployFile'))]",
+    "customScriptAnsibleCommand":"[concat('bash ',variables('customScriptDeployFile'))]",
+    "osProfile_hc_password":{
+      "computerName":"[parameters('hcVmName')]",
+      "adminUsername":"[parameters('adminUsername')]",
+      "adminPassword":"[parameters('adminPassword')]"
+    },
+    "osProfile_hc_sshPublicKey":{
+      "computerName":"[parameters('hcVmName')]",
+      "adminUsername":"[parameters('adminUsername')]",
+      "linuxConfiguration":{
+        "disablePasswordAuthentication":"true",
+        "ssh":{
+          "publicKeys":[
+            {
+              "path":"[variables('sshKeyPath')]",
+              "keyData":"[parameters('sshKeyData')]"
+            }
+          ]
+        }
+      }
+    },
+    "apiVersion":{
+      "resources":{
+        "deployments":"2015-01-01"
+      },
+      "network":"2015-06-15",
+      "storage":"2015-06-15",
+      "compute":"2015-06-15",
+      "deployment":"2016-02-01"
+    }
+  },
+  "resources":[
+    {
+      "comments":"OK: Interface for Ansible Control VM with a public IP attached",
+      "apiVersion":"[variables('apiVersion').network]",
+      "type":"Microsoft.Network/networkInterfaces",
+      "name":"[variables('hcNicName')]",
+      "location":"[parameters('location')]",
+      "dependsOn":[
+      ],
+      "properties":{
+        "dnsSettings":{
+          "dnsServers":[
+          ]
+        },
+        "ipConfigurations":[
+          {
+            "name":"ipconfig1",
+            "properties":{
+              "privateIPAllocationMethod":"Dynamic",
+              "publicIPAddress":{
+                "id":"[resourceId('Microsoft.Network/publicIPAddresses',parameters('hcPublicIPAddressName'))]"
+              },
+              "subnet":{
+                "id":"[variables('hcSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "comments":"OK: Custom script extension for the Ansible Control VM",
+      "type":"Microsoft.Compute/virtualMachines/extensions",
+      "name":"[concat(parameters('hcVmName'),'/installAnsible')]",
+      "apiVersion":"[variables('apiVersion').compute]",
+      "location":"[parameters('location')]",
+      "dependsOn":[
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('hcVmName'))]"
+      ],
+      "properties":{
+        "publisher":"Microsoft.OSTCExtensions",
+        "type":"CustomScriptForLinux",
+        "typeHandlerVersion":"1.5",
+        "autoUpgradeMinorVersion":true,
+        "settings":{
+          "fileUris":[
+            "[variables('customScriptDeployUrl')]"
+          ]
+        },
+        "protectedSettings":{
+          "commandToExecute":"[concat(variables('customScriptAnsibleCommand'),' ')]"
+        }
+      }
+    },
+    {
+      "comments":"Ansible Contol VM",
+      "apiVersion":"[variables('apiVersion').compute]",
+      "type":"Microsoft.Compute/virtualMachines",
+      "name":"[parameters('hcVmName')]",
+      "location":"[parameters('location')]",
+      "dependsOn":[
+        "[concat('Microsoft.Network/networkInterfaces/', variables('hcNicName'))]"
+      ],
+      "properties":{
+        "hardwareProfile":{
+          "vmSize":"[parameters('hcVmSize')]"
+        },
+        "osProfile":"[variables(concat('osProfile_hc_', parameters('authenticationType')))]",
+        "storageProfile":{
+          "imageReference":{
+            "publisher":"[variables('imagePublisher')]",
+            "offer":"[variables('imageOffer')]",
+            "sku":"[variables('ubuntuOSVersion')]",
+            "version":"latest"
+          },
+          "osDisk":{
+            "name":"osdisk",
+            "vhd":{
+              "uri":"[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('hcStorageAccountName')), variables('apiVersion').storage).primaryEndpoints.blob, variables('hcVmStorageAccountContainerName'),'/', variables('hcOSDiskName'), '.vhd')]"
+            },
+            "caching":"ReadWrite",
+            "createOption":"FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "datadisk0",
+              "diskSizeGB": "100",
+              "lun": 0,
+              "caching": "None",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('http://', parameters('hcStorageAccountName'), '.blob.core.windows.net/', variables('hcVmStorageAccountContainerName'), '/', parameters('hcVmName'), '-data0.vhd')]"
+              }
+            }
+          ]
+        },
+        "networkProfile":{
+          "networkInterfaces":[
+            {
+              "id":"[resourceId('Microsoft.Network/networkInterfaces',variables('hcNicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile":{
+          "bootDiagnostics":{
+            "enabled":"true",
+            "storageUri":"[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName')), variables('apiVersion').storage).primaryEndpoints.blob)]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs":{ }
+}

@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "POC Deployement with consul and envconsul",
+  "description": "This template creates a cluster asynchronously",
+  "summary": "Use of consul and and env consul to symplify deployment",
+  "githubUsername": "herveleclerc",
+  "dateUpdated": "2017-01-06"
+}

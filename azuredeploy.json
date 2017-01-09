@@ -1,0 +1,324 @@
+{
+  "$schema":"https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion":"1.0.0.0",
+  "parameters":{
+    "templatesBaseURL":{
+      "type":"string",
+      "metadata":{
+        "description":"Base template URL for nested template",
+        "artifactsBaseUrl":""
+      },
+      "defaultValue":"https://raw.githubusercontent.com/alterway/arm-prestashop-docker-cluster/master"
+    },
+    "adminUserName":{
+      "type":"string",
+      "metadata":{
+        "description":"Username for the Ansible Control Virtual Machine"
+      },
+      "defaultValue":"pr35745h0p"
+    },
+    "authenticationType":{
+      "type":"string",
+      "allowedValues":[
+        "password",
+        "sshPublicKey"
+      ]
+    },
+    "adminPassword":{
+      "type":"securestring",
+      "defaultValue":"",
+      "metadata":{
+        "description":"Password for the Virtual Machine. Not used if authenticationType of sshPublicKey."
+      }
+    },
+    "sshKeyData":{
+      "type":"string",
+      "defaultValue": "",
+      "metadata":{
+        "description":"SSH RSA public key file as a string. Not used if authenticationType of password."
+      }
+    },
+    "dnsNameForAnsiblePublicIP":{
+      "type":"string",
+      "metadata":{
+        "description":"Dns Name for Jumpbox VM"
+      }
+    },
+    "hcPublicIPAddressName":{
+      "type":"string",
+      "defaultValue":"hcPublicIP",
+      "metadata":{
+        "description":"Public IP address Name for Jumpbox VM"
+      }
+    },
+    "hcVmSize":{
+      "type":"string",
+      "defaultValue":"Standard_DS1",
+      "metadata":{
+        "description":"Instance size for JumpBox VMs"
+      }
+    },
+    "hcStorageAccountName":{
+      "type":"string",
+      "metadata":{
+        "description":"Storage Account Name for JumpBox VM"
+      }
+    },
+    "hcStorageAccountType":{
+      "type":"string",
+      "defaultValue":"Premium_LRS",
+      "metadata":{
+        "description":"Storage Account type for Jumpbox VM"
+      }
+    },
+    "hcNetworkSecurityGroupName":{
+      "type":"string",
+      "metadata":{
+        "description":"Network Security group for Jumpbox"
+      },
+      "defaultValue":"hcSecurityGroup"
+    },
+    "shopSize":{
+      "type":"string",
+      "defaultValue":"Small",
+      "allowedValues":[
+        "Small",
+        "Medium",
+        "Large"
+      ],
+      "metadata":{
+        "description":"T-shirt size of the PrestaShop cluster"
+      }
+    },
+    "prestashop_firstname":{
+      "type":"string",
+      "metadata":{
+        "description":"Prestatshop Admin Firstname"
+      }
+    },
+    "prestashop_lastname":{
+      "type":"string",
+      "metadata":{
+        "description":"Prestatshop Admin Lastname"
+      }
+    },
+    "prestashop_email":{
+      "type":"string",
+      "metadata":{
+        "description":"Prestatshop Admin email"
+      }
+    },
+    "prestashop_password":{
+      "type":"securestring",
+      "metadata":{
+        "description":"Prestatshop Admin Password"
+      }
+    },
+    "hcSubnetPrefix":{
+      "type":"string",
+      "metadata":{
+        "description":"Control VM Subnet Prefix"
+      },
+      "defaultValue":"10.0.0.0/24"
+    },
+    "virtualNetworkName":{
+      "type":"string",
+      "metadata":{
+        "description":"Virtual Network Name"
+      },
+      "defaultValue":"vnet-prestashop"
+    },
+    "addressPrefix":{
+      "type":"string",
+      "metadata":{
+        "description":"Virtual Network address Prefix"
+      },
+      "defaultValue":"10.0.0.0/16"
+    },
+    "hcSubnetName":{
+      "type":"string",
+      "metadata":{
+        "description":"Name of Jumpbox subnet"
+      },
+      "defaultValue":"hc-subnet"
+    },
+    "location":{
+      "type":"string",
+      "metadata": {
+        "description":"Deployment location"
+      }
+    }
+  },
+  "variables":{
+    "configuration":{
+      "sharTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/sharedRes.json')]",
+      "jumpTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/jumpBox.json')]"
+    },
+    "diagnosticsStorageAccountName": "[concat(uniqueString(resourceGroup().id),'diag')]",
+    "diagnosticsStorageAccountType": "Standard_LRS",
+    "hcPublicIPAddressType":"Dynamic",
+    "apiVersion":{
+      "resources":{
+        "deployments":"2015-01-01"
+      },
+      "network":"2016-03-30",
+      "storage":"2015-06-15",
+      "compute":"2015-06-15",
+      "deployment":"2016-02-01"
+    },
+    "cleanRGP":"[uniqueString(resourceGroup().id, deployment().name)]",
+    "hcVmName":"[concat('ans', variables('cleanRGP'))]"
+  },
+  "resources":[
+    { "comments":"OK: Public IP for Ansible Control VM (JumpBox)",
+      "apiVersion":"[variables('apiVersion').network]",
+      "type":"Microsoft.Network/publicIPAddresses",
+      "name":"[parameters('hcPublicIPAddressName')]",
+      "location":"[parameters('location')]",
+      "properties":{
+        "publicIPAllocationMethod":"[variables('hcPublicIPAddressType')]",
+        "dnsSettings":{
+          "domainNameLabel":"[parameters('dnsNameForAnsiblePublicIP')]"
+        }
+      }
+    },
+    {
+      "comments":"OK: Shared resource deployment",
+      "name":"SharedDeployment",
+      "type":"Microsoft.Resources/deployments",
+      "apiVersion":"[variables('apiVersion').deployment]",
+      "dependsOn":[
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('hcPublicIPAddressName'))]"
+      ],
+      "properties":{
+        "mode":"Incremental",
+        "templateLink":{
+          "uri":"[variables('configuration').sharTemplateURL]",
+          "contentVersion":"1.0.0.0"
+        },
+        "parameters":{
+          "location":{
+            "value":"[parameters('location')]"
+          },
+          "diagnosticsStorageAccountName":{
+            "value":"[variables('diagnosticsStorageAccountName')]"
+          },
+          "diagnosticsStorageAccountType":{
+            "value":"[variables('diagnosticsStorageAccountType')]"
+          },
+          "hcStorageAccountName":{
+            "value":"[parameters('hcStorageAccountName')]"
+          },
+          "hcStorageAccountType":{
+            "value":"[parameters('hcStorageAccountType')]"
+          },
+          "hcPublicIPAddressName":{
+            "value":"[parameters('hcPublicIPAddressName')]"
+          },
+          "dnsNameForAnsiblePublicIP":{
+            "value":"[parameters('dnsNameForAnsiblePublicIP')]"
+          },
+          "virtualNetworkName":{
+            "value":"[parameters('virtualNetworkName')]"
+          },
+          "addressPrefix":{
+            "value":"[parameters('addressPrefix')]"
+          },
+          "hcSubnetName":{
+            "value":"[parameters('hcSubnetName')]"
+          },
+          "hcSubnetPrefix":{
+            "value":"[parameters('hcSubnetPrefix')]"
+          },
+          "hcNetworkSecurityGroupName":{
+            "value":"[parameters('hcNetworkSecurityGroupName')]"
+          }
+        }
+      }
+    },
+    {
+      "comments":"OK: Jumpbox resource deployment",
+      "name":"JumpBoxDeployment",
+      "type":"Microsoft.Resources/deployments",
+      "apiVersion":"[variables('apiVersion').deployment]",
+      "dependsOn":[
+          "[concat('Microsoft.Resources/deployments/', 'SharedDeployment')]"
+      ],
+      "properties":{
+        "mode":"Incremental",
+        "templateLink":{
+          "uri":"[variables('configuration').jumpTemplateURL]",
+          "contentVersion":"1.0.0.0"
+        },
+        "parameters":{
+          "location":{
+            "value":"[parameters('location')]"
+          },
+          "templatesBaseURL":{
+            "value":"[parameters('templatesBaseURL')]"
+          },
+          "adminUserName":{
+            "value":"[parameters('adminUserName')]"
+          },
+          "adminPassword":{
+            "value":"[parameters('adminPassword')]"
+          },
+          "sshKeyData":{
+            "value":"[parameters('sshKeyData')]"
+          },
+          "authenticationType":{
+            "value":"[parameters('authenticationType')]"
+          },
+          "hcStorageAccountName":{
+            "value":"[parameters('hcStorageAccountName')]"
+          },
+          "dnsNameForAnsiblePublicIP":{
+            "value":"[parameters('dnsNameForAnsiblePublicIP')]"
+          },
+          "hcPublicIPAddressName":{
+            "value":"[parameters('hcPublicIPAddressName')]"
+          },
+          "virtualNetworkName":{
+            "value":"[parameters('virtualNetworkName')]"
+          },
+          "hcSubnetName":{
+            "value":"[parameters('hcSubnetName')]"
+          },
+          "hcSubnetPrefix":{
+            "value":"[parameters('hcSubnetPrefix')]"
+          },
+          "prestashop_firstname":{
+            "value":"[parameters('prestashop_firstname')]"
+          },
+          "prestashop_lastname":{
+            "value":"[parameters('prestashop_lastname')]"
+          },
+          "prestashop_email":{
+            "value":"[parameters('prestashop_email')]"
+          },
+          "prestashop_password":{
+            "value":"[parameters('prestashop_password')]"
+          },
+          "hcVmSize":{
+            "value":"[parameters('hcVmSize')]"
+          },
+          "hcVmName":{
+            "value":"[variables('hcVmName')]"
+          },
+          "shopSize":{
+            "value":"[parameters('shopSize')]"
+          },
+          "diagnosticsStorageAccountName":{
+            "value":"[variables('diagnosticsStorageAccountName')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "Ansible_FQDN": {
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('hcPublicIPAddressName')), variables('apiVersion').network).dnsSettings.fqdn]",
+      "type": "string"
+    }
+  }
+}
