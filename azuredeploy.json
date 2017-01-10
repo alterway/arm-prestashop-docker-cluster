@@ -224,9 +224,9 @@
 
     "nodeFaultDomainCount":"3",
     "nodeUpdateDomainCount":"5",
-    "nodeAvailabilitySetName":"[concat('bkav', variables('cleanRGP'))]",
+    "nodeAvailabilitySetName":"[concat('nodeav', variables('cleanRGP'))]",
     "nodeVmName":"[concat('bdd', variables('cleanRGP'))]",
-    "nodeNetworkSecurityGroupName":"bkSecurityGroup",
+    "nodeNetworkSecurityGroupName":"nodeSecurityGroup",
     "nodeSubnetRoot":"[concat( split(parameters('nodeSubnetPrefix'), '.')[0], '.', split(parameters('nodeSubnetPrefix'), '.')[1], '.', split(parameters('nodeSubnetPrefix'), '.')[2])]",
     "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]"
   },
