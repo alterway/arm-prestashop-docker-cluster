@@ -13,7 +13,7 @@
     "adminUserName":{
       "type":"string",
       "metadata":{
-        "description":"Username for the Ansible Control Virtual Machine"
+        "description":"Username for the Jumpbox Control Virtual Machine"
       },
       "defaultValue":"devops"
     },
@@ -123,6 +123,13 @@
       },
       "defaultValue":"nodedockeraw"
     },
+    "nodeNetworkSecurityGroupName":{
+      "type":"string",
+      "metadata":{
+        "description":"Network Security group for Docker node"
+      },
+      "defaultValue":"nodeSecurityGroup"
+    },
     "shopSize":{
       "type":"string",
       "defaultValue":"Small",
@@ -220,7 +227,7 @@
       "deployment":"2016-02-01"
     },
     "cleanRGP":"[uniqueString(resourceGroup().id, deployment().name)]",
-    "hcVmName":"[concat('ans', variables('cleanRGP'))]",
+    "hcVmName":"[concat('jump', variables('cleanRGP'))]",
 
     "nodeFaultDomainCount":"3",
     "nodeUpdateDomainCount":"5",
@@ -231,7 +238,7 @@
     "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]"
   },
   "resources":[
-    { "comments":"OK: Public IP for Ansible Control VM (JumpBox)",
+    { "comments":"OK: Public IP for Jumpbox Control VM (JumpBox)",
       "apiVersion":"[variables('apiVersion').network]",
       "type":"Microsoft.Network/publicIPAddresses",
       "name":"[parameters('hcPublicIPAddressName')]",
@@ -287,6 +294,15 @@
           },
           "hcNetworkSecurityGroupName":{
             "value":"[parameters('hcNetworkSecurityGroupName')]"
+          },
+          "nodeNetworkSecurityGroupName":{
+            "value":"[parameters('nodeNetworkSecurityGroupName')]"
+          },
+          "nodeSubnetName":{
+            "value":"[parameters('nodeSubnetName')]"
+          },
+          "nodeSubnetPrefix":{
+            "value":"[parameters('nodeSubnetPrefix')]"
           }
         }
       }

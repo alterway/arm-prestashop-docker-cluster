@@ -57,6 +57,25 @@
       },
       "defaultValue": "hcSecurityGroup"
     },
+    "nodeSubnetName":{
+      "type":"string",
+      "metadata": {
+        "description":"Name of back subnet"
+      }
+    },
+    "nodeSubnetPrefix":{
+      "type":"string",
+      "metadata": {
+        "description":"back Subnet Prefix"
+      }
+    },
+    "nodeNetworkSecurityGroupName":{
+      "type":"string",
+      "metadata": {
+        "description":"Network Security group for Docker node"
+      },
+      "defaultValue": "nodeSecurityGroup"
+    },
     "location":{
       "type":"string",
       "metadata":{
@@ -102,6 +121,45 @@
         ]
       }
     },
+    { "comments":"OK: Network Security Group for Docekr VMs",
+      "apiVersion":"[variables('apiVersion').network]",
+      "type":"Microsoft.Network/networkSecurityGroups",
+      "name":"[parameters('nodeNetworkSecurityGroupName')]",
+      "location":"[parameters('location')]",
+      "tags":{
+        "displayName":"Node-NetworkSecurityGroup"
+      },
+      "properties":{
+        "securityRules":[
+          {
+            "name":"hc-in",
+            "properties":{
+              "protocol":"*",
+              "sourcePortRange":"*",
+              "destinationPortRange":"*",
+              "sourceAddressPrefix":"[parameters('hcSubnetPrefix')]",
+              "destinationAddressPrefix":"*",
+              "access":"Allow",
+              "priority":102,
+              "direction":"Inbound"
+            }
+          },
+          {
+            "name":"node-in",
+            "properties":{
+              "protocol":"*",
+              "sourcePortRange":"*",
+              "destinationPortRange":"*",
+              "sourceAddressPrefix":"[parameters('nodeSubnetPrefix')]",
+              "destinationAddressPrefix":"*",
+              "access":"Allow",
+              "priority":103,
+              "direction":"Inbound"
+            }
+          }
+        ]
+      }
+    },
     { "comments":"OK: Global Storage Account for Ansible control VM (JumpBox)",
       "type":"Microsoft.Storage/storageAccounts",
       "name":"[toLower(parameters('hcStorageAccountName'))]",
@@ -141,6 +199,15 @@
               "addressPrefix":"[parameters('hcSubnetPrefix')]",
               "networkSecurityGroup":{
                 "id":"[resourceId('Microsoft.Network/networkSecurityGroups', parameters('hcNetworkSecurityGroupName'))]"
+              }
+            }
+          },
+          {
+            "name":"[parameters('nodeSubnetName')]",
+            "properties":{
+              "addressPrefix":"[parameters('nodeSubnetPrefix')]",
+              "networkSecurityGroup":{
+                "id":"[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nodeNetworkSecurityGroupName'))]"
               }
             }
           }
