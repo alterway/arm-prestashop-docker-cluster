@@ -39,7 +39,7 @@
         "description":"SSH RSA public key file as a string. Not used if authenticationType of password."
       }
     },
-    "dnsNameForAnsiblePublicIP":{
+    "dnsNameForJumpboxPublicIP":{
       "type":"string",
       "metadata":{
         "description":"Dns Name for Jumpbox VM"
@@ -246,7 +246,7 @@
       "properties":{
         "publicIPAllocationMethod":"[variables('hcPublicIPAddressType')]",
         "dnsSettings":{
-          "domainNameLabel":"[parameters('dnsNameForAnsiblePublicIP')]"
+          "domainNameLabel":"[parameters('dnsNameForJumpboxPublicIP')]"
         }
       }
     },
@@ -459,7 +459,7 @@
     }
   ],
   "outputs": {
-    "Ansible_FQDN": {
+    "Jumpbox_FQDN": {
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('hcPublicIPAddressName')), variables('apiVersion').network).dnsSettings.fqdn]",
       "type": "string"
     }

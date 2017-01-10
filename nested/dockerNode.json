@@ -13,7 +13,7 @@
     "adminUsername":{
       "type":"string",
       "metadata":{
-        "description":"Username for the Ansible Control Virtual Machine and provisoning"
+        "description":"Username for the Jumpbox Control Virtual Machine and provisoning"
       }
     },
     "adminPassword":{

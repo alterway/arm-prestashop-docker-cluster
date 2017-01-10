@@ -1,5 +1,5 @@
 {
-  "dnsNameForAnsiblePublicIP": {
+  "dnsNameForJumpboxPublicIP": {
     "value": "jumpboxhl"
   },
   "adminUsername": {

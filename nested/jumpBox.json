@@ -103,7 +103,7 @@
       "type":"string",
       "defaultValue":"Standard_DS1",
       "metadata":{
-        "description":"Instance size for Ansible VM Control"
+        "description":"Instance size for Jumpbox VM Control"
       }
     },
     "hcVmName":{
@@ -144,7 +144,7 @@
     "scriptsBaseUrl":"[concat(parameters('templatesBaseURL'),'/scripts/')]",
     "customScriptDeployFile":"deploy.sh",
     "customScriptDeployUrl":"[concat(variables('scriptsBaseUrl'),variables('customScriptDeployFile'))]",
-    "customScriptAnsibleCommand":"[concat('bash ',variables('customScriptDeployFile'))]",
+    "customScriptJumpboxCommand":"[concat('bash ',variables('customScriptDeployFile'))]",
     "customScriptParameters":"[concat(parameters('adminUsername'),' \"',parameters('templatesBaseURL'),'\"')]",
     "osProfile_hc_password":{
       "computerName":"[parameters('hcVmName')]",
@@ -178,7 +178,7 @@
   },
   "resources":[
     {
-      "comments":"OK: Interface for Ansible Control VM with a public IP attached",
+      "comments":"OK: Interface for Jumpbox Control VM with a public IP attached",
       "apiVersion":"[variables('apiVersion').network]",
       "type":"Microsoft.Network/networkInterfaces",
       "name":"[variables('hcNicName')]",
@@ -208,9 +208,9 @@
       }
     },
     {
-      "comments":"OK: Custom script extension for the Ansible Control VM",
+      "comments":"OK: Custom script extension for the Jumpbox Control VM",
       "type":"Microsoft.Compute/virtualMachines/extensions",
-      "name":"[concat(parameters('hcVmName'),'/installAnsible')]",
+      "name":"[concat(parameters('hcVmName'),'/installJumpbox')]",
       "apiVersion":"[variables('apiVersion').compute]",
       "location":"[parameters('location')]",
       "dependsOn":[
@@ -227,12 +227,12 @@
           ]
         },
         "protectedSettings":{
-          "commandToExecute":"[concat(variables('customScriptAnsibleCommand'),' ',variables('customScriptParameters'))]"
+          "commandToExecute":"[concat(variables('customScriptJumpboxCommand'),' ',variables('customScriptParameters'))]"
         }
       }
     },
     {
-      "comments":"Ansible Contol VM",
+      "comments":"Jumpbox Contol VM",
       "apiVersion":"[variables('apiVersion').compute]",
       "type":"Microsoft.Compute/virtualMachines",
       "name":"[parameters('hcVmName')]",

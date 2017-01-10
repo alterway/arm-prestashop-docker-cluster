@@ -95,7 +95,7 @@
     }
    },
   "resources": [
-    { "comments":"Network Security Group for Ansible Control VM (JumpBox)",
+    { "comments":"Network Security Group for Jumpbox Control VM (JumpBox)",
       "apiVersion":"[variables('apiVersion').network]",
       "type":"Microsoft.Network/networkSecurityGroups",
       "name":"[parameters('hcNetworkSecurityGroupName')]",
@@ -160,7 +160,7 @@
         ]
       }
     },
-    { "comments":"OK: Global Storage Account for Ansible control VM (JumpBox)",
+    { "comments":"OK: Global Storage Account for Jumpbox control VM (JumpBox)",
       "type":"Microsoft.Storage/storageAccounts",
       "name":"[toLower(parameters('hcStorageAccountName'))]",
       "apiVersion":"[variables('apiVersion').storage]",
