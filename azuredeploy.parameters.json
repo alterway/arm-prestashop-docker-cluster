@@ -47,6 +47,21 @@
   "hcSubnetName": {
     "value": "hc-subnet"
   },
+  "nodeStorageAccountType": {
+    "value": "Premium_LRS",
+  },
+  "nodeSubnetPrefix":{
+    "value": "10.0.4.0/24"
+  },
+  "nodeSubnetName":{
+    "value": "back-subnet"
+  },
+  "nodeStorageAccountName":{
+    "value": "dockeraw"
+  },
+  "nodeVmSize":{
+      "value":"Standard_DS1"
+  },
   "location": {
     "value": "northeurope"
   }

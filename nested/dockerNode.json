@@ -1,0 +1,315 @@
+{
+  "$schema":"https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion":"1.0.0.0",
+  "parameters":{
+    "templatesBaseURL":{
+      "type":"string",
+      "metadata":{
+        "description":"Base template URL for nested template",
+        "artifactsBaseUrl":""
+      },
+      "defaultValue":"https://raw.githubusercontent.com/alterway/arm-prestashop-docker-cluster/master"
+    },
+    "adminUsername":{
+      "type":"string",
+      "metadata":{
+        "description":"Username for the Ansible Control Virtual Machine and provisoning"
+      }
+    },
+    "adminPassword":{
+      "type":"string",
+      "metadata":{
+        "description":"Admin Password for the Vms"
+      },
+      "defaultValue":"devops"
+    },
+    "sshKeyData":{
+      "type":"string",
+      "metadata":{
+        "description":"Public key for SSH authentication"
+      }
+    },
+    "nodeVmSize":{
+      "type":"string",
+      "metadata":{
+        "description":"Instance size for Docker VMs"
+      }
+    },
+    "numberOfNodes":{
+      "type":"int",
+      "metadata":{
+        "description":"Number of Docker nodes to create >=2"
+      }
+    },
+    "nodeAvailabilitySetName":{
+      "type":"string",
+      "metadata":{
+        "description":"Name of the availability Set"
+      }
+    },
+    "nodeStorageAccountName":{
+      "type":"string",
+      "metadata":{
+        "description":"Storage Account name"
+      }
+    },
+    "nodeStorageAccountType":{
+      "type":"string",
+      "metadata":{
+        "description":"Account type"
+      }
+    },
+    "nodeSubnetRoot":{
+      "type":"string"
+    },
+    "nodeSubnetName":{
+      "type":"string",
+      "metadata":{
+        "description":"Subnet Name"
+      }
+    },
+    "vnetID":{
+      "type":"string",
+      "metadata":{
+        "description":"vnet ID"
+      }
+    },
+    "nodeVmName":{
+      "type":"string",
+      "metadata":{
+        "description":"Basename of Docker VMs"
+      }
+    },
+    "shopSize":{
+      "type":"string",
+      "metadata":{
+        "description":"T-shirt size of the PrestaShop cluster"
+      }
+    },
+    "diagnosticsStorageAccountName":{
+      "type":"string",
+      "metadata":{
+        "description":"Storage Account Name for diags"
+      }
+    },
+    "authenticationType":{
+      "type":"string",
+      "allowedValues":[
+        "password",
+        "sshPublicKey"
+      ]
+    },
+    "hcprivateIPAddress":{
+      "type":"string",
+      "metadata":{
+        "description":"IP priv Jumpbox"
+      }
+    },
+    "location":{
+      "type":"string",
+      "metadata":{
+        "description":"Deployment location"
+      }
+    }
+  },
+  "variables":{
+    "linuxConfiguration_sshPublicKey": {
+      "disablePasswordAuthentication": "true",
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[variables('sshKeyPath')]",
+            "keyData": "[parameters('sshKeyData')]"
+          }
+        ]
+      }
+    },
+    "linuxConfiguration_password": {},
+    "linuxConfiguration": "[variables(concat('linuxConfiguration_', parameters('authenticationType')))]",
+    "nodeVmStorageAccountContainerName":"vhds",
+    "sshKeyPath":"[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
+    "imagePublisher":"Canonical",
+    "imageOffer":"UbuntuServer",
+    "sku":"16.04.0-LTS",
+    "nodeOSDiskName":"nodeosdisk",
+    "nodeNicName":"nodeVnic",
+    "nodeSubnetRef":"[concat(parameters('vnetID'),'/subnets/',parameters('nodeSubnetName'))]",
+    "scriptsBaseUrl":"[concat(parameters('templatesBaseURL'),'/scripts/')]",
+    "customScriptDeployFile":"deploy-node.sh",
+    "customScriptDeployUrl":"[concat(variables('scriptsBaseUrl'),variables('customScriptDeployFile'))]",
+    "customScriptNodeCommand":"[concat('bash ',variables('customScriptDeployFile'))]",
+    "apiVersion":{
+      "resources":{
+        "deployments":"2015-01-01"
+      },
+      "network":"2015-06-15",
+      "storage":"2015-06-15",
+      "compute":"2015-06-15"
+    },
+    "shopSizeSmall": {
+      "ddSizeNode": 127
+    },
+    "shopSizeMedium": {
+      "ddSizeNode": 511
+    },
+    "shopSizeLarge": {
+      "ddSizeNode": 1023
+    },
+    "clusterSpec": "[variables(concat('shopSize', parameters('shopSize')))]"
+  },
+  "resources":[
+    {
+      "comments":"Global Storage Account for the Docker VM",
+      "type":"Microsoft.Storage/storageAccounts",
+      "name":"[toLower(parameters('nodeStorageAccountName'))]",
+      "apiVersion":"[variables('apiVersion').storage]",
+      "location":"[parameters('location')]",
+      "properties":{
+        "accountType":"[parameters('nodeStorageAccountType')]"
+      }
+    },
+    {
+      "comments":"LOOP Interface for Docker VMs",
+      "apiVersion":"[variables('apiVersion').network]",
+      "type":"Microsoft.Network/networkInterfaces",
+      "name":"[concat(variables('nodeNicName'), copyindex())]",
+      "location":"[parameters('location')]",
+      "copy":{
+        "name":"nodeNicLoop",
+        "count":"[parameters('numberOfNodes')]"
+      },
+      "dependsOn":[
+      ],
+      "properties":{
+        "dnsSettings":{
+          "dnsServers": []
+        },
+        "ipConfigurations":[
+          {
+            "name":"nodeipconfig",
+            "properties":{
+              "privateIPAllocationMethod":"Static",
+              "privateIPAddress":"[concat(parameters('nodeSubnetRoot'), '.',add(copyindex(),4) )]",
+              "subnet":{
+                "id":"[variables('nodeSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "comments":"Custom script extension for the Docker VMs",
+      "type":"Microsoft.Compute/virtualMachines/extensions",
+      "name":"[concat(parameters('nodeVmName'),copyindex(),'/installNode')]",
+      "apiVersion":"[variables('apiVersion').compute]",
+      "location":"[parameters('location')]",
+      "copy":{
+        "name":"nodeExtLoop",
+        "count":"[parameters('numberOfNodes')]"
+      },
+      "dependsOn":[
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('nodeVmName'),copyindex())]"
+      ],
+      "properties":{
+        "publisher":"Microsoft.OSTCExtensions",
+        "type":"CustomScriptForLinux",
+        "typeHandlerVersion":"1.4",
+        "autoUpgradeMinorVersion": true,
+        "settings":{
+          "fileUris":[
+            "[variables('customScriptDeployUrl')]"
+          ]
+        },
+        "protectedSettings":{
+          "commandToExecute":"[concat(variables('customScriptNodeCommand'),' \"',add(copyindex(),1), '\" \"',parameters('adminUsername'), '\" \"',parameters('numberOfNodes'),'\" \"',parameters('nodeSubnetRoot'),'\" \"',parameters('nodeVmName'),'\" \"',parameters('hcprivateIPAddress'),'\"')]"
+        }
+      }
+    },
+    {
+      "comments":"VM Docker provisioned",
+      "apiVersion":"[variables('apiVersion').compute]",
+      "type":"Microsoft.Compute/virtualMachines",
+      "name":"[concat(parameters('nodeVmName'),copyindex())]",
+      "location":"[parameters('location')]",
+      "copy":{
+        "name":"nodeVmLoop",
+        "count":"[parameters('numberOfNodes')]"
+      },
+      "dependsOn":[
+        "[concat('Microsoft.Storage/storageAccounts/', toLower(parameters('nodeStorageAccountName')) ) ]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nodeNicName'),copyindex())]"
+      ],
+      "plan": {
+        "publisher": "[variables('imagePublisher')]",
+        "product": "[variables('imageOffer')]",
+        "name": "[variables('sku')]"
+      },
+      "properties":{
+        "availabilitySet":{
+          "id":"[resourceId('Microsoft.Compute/availabilitySets', parameters('nodeAvailabilitySetName'))]"
+        },
+        "hardwareProfile":{
+          "vmSize":"[parameters('nodeVmSize')]"
+        },
+        "osProfile": {
+          "computerName":"[concat(parameters('nodeVmName'),copyindex())]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "linuxConfiguration": "[variables('linuxConfiguration')]"
+        },
+        "storageProfile":{
+          "imageReference":{
+            "publisher":"[variables('imagePublisher')]",
+            "offer":"[variables('imageOffer')]",
+            "sku":"[variables('sku')]",
+            "version":"latest"
+          },
+          "osDisk":{
+            "name":"[concat(parameters('nodeVmName'), copyindex())]",
+            "vhd":{
+              "uri":"[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('nodeStorageAccountName')), variables('apiVersion').storage).primaryEndpoints.blob, variables('nodeVmStorageAccountContainerName'),'/', variables('nodeOSDiskName'),copyindex(), '.vhd')]"
+            },
+            "caching":"ReadWrite",
+            "createOption":"FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "datadisk0",
+              "diskSizeGB": "[variables('clusterSpec').ddSizeNode]",
+              "lun": 0,
+              "caching": "None",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('http://', parameters('nodeStorageAccountName'), '.blob.core.windows.net/', variables('nodeVmStorageAccountContainerName'), '/', parameters('nodeVmName'), '-data0', copyindex(), '.vhd')]"
+              }
+            },
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "[variables('clusterSpec').ddSizeNode]",
+              "lun": 1,
+              "caching": "None",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('http://', parameters('nodeStorageAccountName'), '.blob.core.windows.net/', variables('nodeVmStorageAccountContainerName'), '/', parameters('nodeVmName'), '-data1', copyindex(), '.vhd')]"
+              }
+            }
+          ]
+        },
+        "networkProfile":{
+          "networkInterfaces":[
+            {
+              "id":"[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nodeNicName'),copyindex() ) )]"
+            }
+          ]
+        },
+        "diagnosticsProfile":{
+          "bootDiagnostics":{
+            "enabled":"true",
+            "storageUri":"[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName')), variables('apiVersion').storage).primaryEndpoints.blob)]"
+          }
+        }
+      }
+    }
+  ]
+}

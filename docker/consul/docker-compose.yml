@@ -2,20 +2,10 @@ version: "2"
 services:
   consul:
     container_name: consul
-    image: consul
-    command: |
-      agent                  \
-      -server                \
-      -advertise=${IP}       \
-      -client=${IP}          \
-      -bind=${IP}            \
-      -bootstrap-expect 1    \
-      -dc azure              \
-      -recursor 8.8.8.8      \
-      -ui-dir /ui            \
-      -data-dir /data/consul \
-      -encrypt cg1StTXbQs9gPvAd2o1yrg==
+    image: progrium/consul
+    command: -server -advertise=${IP} -bootstrap-expect 1 -dc azure -recursor 8.8.8.8 -ui-dir /ui -data-dir /data/consul -encrypt cg1StTXbQs9gPvAd2o1yrg==
     network_mode: host
+    user: root
     volumes:
     - consul_data:/data
     restart: always

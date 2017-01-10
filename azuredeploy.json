@@ -81,6 +81,47 @@
       },
       "defaultValue":"hcSecurityGroup"
     },
+    "nodeVmSize":{
+      "type":"string",
+      "defaultValue":"Standard_DS1",
+      "metadata":{
+        "description":"Instance size for Web Front VMs Minimum Standard_A2"
+      }
+    },
+    "numberOfnodes":{
+      "type":"int",
+      "defaultValue":2,
+      "metadata":{
+        "description":"Number of Back nodes to create >=2"
+      }
+    },
+    "nodeStorageAccountType": {
+      "type": "string",
+      "defaultValue": "Premium_LRS",
+      "metadata":{
+        "description":"Storage Account type for Back VMs"
+      }
+    },
+    "nodeSubnetPrefix":{
+      "type":"string",
+      "metadata": {
+        "description":"Back Subnet Prefix"
+      },
+      "defaultValue": "10.0.4.0/24"
+    },
+    "nodeSubnetName":{
+      "type":"string",
+      "metadata": {
+        "description":"Name of Back subnet"
+      },
+      "defaultValue": "node-subnet"
+    },
+    "nodeStorageAccountName":{
+      "type":"string",
+      "metadata": {
+        "description":"Storage Account Name for Back VMs"
+      }
+    },
     "shopSize":{
       "type":"string",
       "defaultValue":"Small",
@@ -160,11 +201,14 @@
   "variables":{
     "configuration":{
       "sharTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/sharedRes.json')]",
-      "jumpTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/jumpBox.json')]"
+      "jumpTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/jumpBox.json')]",
+      "nodeTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/dockerNode.json')]"
     },
     "diagnosticsStorageAccountName": "[concat(uniqueString(resourceGroup().id),'diag')]",
     "diagnosticsStorageAccountType": "Standard_LRS",
     "hcPublicIPAddressType":"Dynamic",
+    "hcSubnetRoot":"[concat( split(parameters('hcSubnetPrefix'), '.')[0], '.', split(parameters('hcSubnetPrefix'), '.')[1], '.', split(parameters('hcSubnetPrefix'), '.')[2])]",
+    "hcprivateIPAddress":"[concat(variables('hcSubnetRoot'),'.4')]",
     "apiVersion":{
       "resources":{
         "deployments":"2015-01-01"
@@ -175,7 +219,15 @@
       "deployment":"2016-02-01"
     },
     "cleanRGP":"[uniqueString(resourceGroup().id, deployment().name)]",
-    "hcVmName":"[concat('ans', variables('cleanRGP'))]"
+    "hcVmName":"[concat('ans', variables('cleanRGP'))]",
+
+    "nodeFaultDomainCount":"3",
+    "nodeUpdateDomainCount":"5",
+    "nodeAvailabilitySetName":"[concat('bkav', variables('cleanRGP'))]",
+    "nodeVmName":"[concat('bdd', variables('cleanRGP'))]",
+    "nodeNetworkSecurityGroupName":"bkSecurityGroup",
+    "nodeSubnetRoot":"[concat( split(parameters('nodeSubnetPrefix'), '.')[0], '.', split(parameters('nodeSubnetPrefix'), '.')[1], '.', split(parameters('nodeSubnetPrefix'), '.')[2])]",
+    "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]"
   },
   "resources":[
     { "comments":"OK: Public IP for Ansible Control VM (JumpBox)",
@@ -277,6 +329,9 @@
           "hcPublicIPAddressName":{
             "value":"[parameters('hcPublicIPAddressName')]"
           },
+          "hcprivateIPAddress":{
+            "value":"[variables('hcprivateIPAddress')]"
+          },
           "virtualNetworkName":{
             "value":"[parameters('virtualNetworkName')]"
           },
@@ -309,6 +364,79 @@
           },
           "diagnosticsStorageAccountName":{
             "value":"[variables('diagnosticsStorageAccountName')]"
+          }
+        }
+      }
+    },
+    {
+      "name":"NodeDeployment",
+      "type":"Microsoft.Resources/deployments",
+      "apiVersion":"[variables('apiVersion').deployment]",
+      "dependsOn":[
+        "[concat('Microsoft.Storage/storageAccounts/', toLower(variables('diagnosticsStorageAccountName')))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/',variables('nodeNetworkSecurityGroupName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/',parameters('virtualNetworkName'))]"
+      ],
+      "properties":{
+        "mode":"Incremental",
+        "templateLink":{
+          "uri":"[variables('configuration').nodeTemplateURL]",
+          "contentVersion":"1.0.0.0"
+        },
+        "parameters":{
+          "location":{
+            "value":"[parameters('location')]"
+          },
+          "templatesBaseURL":{
+            "value":"[parameters('templatesBaseURL')]"
+          },
+          "adminUserName":{
+            "value":"[parameters('adminUsername')]"
+          },
+          "adminPassword":{
+            "value":"[parameters('adminPassword')]"
+          },
+          "sshKeyData":{
+            "value":"[parameters('sshKeyData')]"
+          },
+          "nodeVmSize":{
+            "value":"[parameters('nodeVmSize')]"
+          },
+          "numberOfNodes":{
+            "value":"[parameters('numberOfNodes')]"
+          },
+          "nodeAvailabilitySetName":{
+            "value":"[variables('nodeAvailabilitySetName')]"
+          },
+          "nodeStorageAccountName":{
+            "value":"[parameters('nodeStorageAccountName')]"
+          },
+          "nodeStorageAccountType":{
+            "value":"[parameters('nodeStorageAccountType')]"
+          },
+          "nodeSubnetRoot":{
+            "value":"[variables('nodeSubnetRoot')]"
+          },
+          "nodeSubnetName":{
+            "value":"[parameters('nodeSubnetName')]"
+          },
+          "vnetID":{
+            "value":"[variables('vnetID')]"
+          },
+          "bkVmName":{
+            "value":"[variables('nodeVmName')]"
+          },
+          "shopSize":{
+            "value":"[parameters('shopSize')]"
+          },
+          "diagnosticsStorageAccountName":{
+            "value":"[variables('diagnosticsStorageAccountName')]"
+          },
+          "authenticationType":{
+            "value":"[parameters('authenticationType')]"
+          },
+          "hcprivateIPAddress":{
+            "value":"[variables('hcprivateIPAddress')]"
           }
         }
       }

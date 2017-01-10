@@ -1,0 +1,10 @@
+version: "2"
+
+services:
+  superviseur:
+    image: alterway/dind-envconsul
+    privileged: true
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - $ADMIN_HOME/scripts:/scripts
+    command: -log-level debug -consul ${IP}:8500 -prefix deploy/nodes sh /scripts/on-change.sh

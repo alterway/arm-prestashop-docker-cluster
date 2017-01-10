@@ -15,14 +15,14 @@
       "metadata":{
         "description":"Admin Username for the Vms"
       },
-      "defaultValue":"pr35745h0p"
+      "defaultValue":"devops"
     },
     "adminPassword":{
       "type":"string",
       "metadata":{
         "description":"Admin Password for the Vms"
       },
-      "defaultValue":"pr35745h0p"
+      "defaultValue":"devops"
     },
     "sshKeyData":{
       "type":"string",
@@ -48,6 +48,13 @@
       "defaultValue":"hcPublicIP",
       "metadata":{
         "description":"Public IP address Name for Jumpbox VM"
+      }
+    },
+    "hcprivateIPAddress":{
+      "type":"string",
+      "defaultValue":"",
+      "metadata":{
+        "description":"Private IP address for Jumpbox VM"
       }
     },
     "virtualNetworkName":{
@@ -187,7 +194,8 @@
           {
             "name":"ipconfig1",
             "properties":{
-              "privateIPAllocationMethod":"Dynamic",
+              "privateIPAllocationMethod":"Static",
+              "privateIPAddress": "[parameters('hcprivateIPAddress')]",
               "publicIPAddress":{
                 "id":"[resourceId('Microsoft.Network/publicIPAddresses',parameters('hcPublicIPAddressName'))]"
               },

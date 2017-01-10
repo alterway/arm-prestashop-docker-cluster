@@ -2,7 +2,7 @@
 function usage()
  {
     echo "INFO:"
-    echo "Usage: deploy.sh [user]"
+    echo "Usage: deploy-node.sh index admin #nodes subnet vmname"
 }
 
 error_log()
@@ -16,8 +16,11 @@ error_log()
 
 function log()
 {
+
   mess="$(hostname): $1"
+
   logger -t "${BASH_SCRIPT}" "${mess}"
+
 }
 
 function ssh_config()
@@ -54,7 +57,42 @@ function ssh_config()
 
   chmod 400 "${ADMIN_HOME}/.ssh/authorized_keys"
   error_log "Unable to chmod $ADMIN_USER authorized_keys file"
+}
 
+function ssh_config_root()
+{
+
+  log "Create ssh configuration for root"
+
+  printf "Host *\n  user %s\n  StrictHostKeyChecking no\n" "root"  >> "/root/.ssh/config"
+
+  error_log "Unable to create ssh config file for user root"
+
+  log "Copy generated keys..."
+
+  cp id_rsa "/root/.ssh/id_rsa"
+  error_log "Unable to copy id_rsa key to root .ssh directory"
+
+  cp id_rsa.pub "/root/.ssh/id_rsa.pub"
+  error_log "Unable to copy id_rsa.pub key to root .ssh directory"
+
+  cat "/root/.ssh/id_rsa.pub" >> "/root/.ssh/authorized_keys"
+  error_log "Unable to copy root id_rsa.pub to authorized_keys "
+
+  chmod 700 "/root/.ssh"
+  error_log "Unable to chmod root .ssh directory"
+
+  chown -R "root:" "/root/.ssh"
+  error_log "Unable to chown to root .ssh directory"
+
+  chmod 400 "/root/.ssh/id_rsa"
+  error_log "Unable to chmod root id_rsa file"
+
+  chmod 644 "/root/.ssh/id_rsa.pub"
+  error_log "Unable to chmod root id_rsa.pub file"
+
+  chmod 400 "/root/.ssh/authorized_keys"
+  error_log "Unable to chmod root authorized_keys file"
 }
 
 function install_docker()
@@ -88,29 +126,22 @@ function install_docker_compose()
   docker-compose --version
 }
 
-function pull_images()
+function register_node()
 {
-  docker pull herveleclerc/azure-commander
+   log "register node to consul"
+   curl -Xs PUT -d "${IP}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/ip
+   curl -Xs PUT -d "0" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/state
+   curl -Xs PUT -d "${nodeVmName}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/hostname
 }
 
-function pull_compose()
-{
-  mkdir -p "~${ADMIN_USER}"/docker/{consul,envconsul}
-  curl -fsSL "$REPO/docker/consul/docker-compose.yml" -o "~${ADMIN_USER}/docker/consul/docker-compose.yml"
-  chown -R  "${ADMIN_USER}" "~${ADMIN_USER}/docker"
-  docker-compose -f "~${ADMIN_USER}/docker/consul/docker-compose.yml" up -d
-}
+function get_sshkeys()
+ {
 
-function put_keys()
-{
-  curl -Xs PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa http://localhost:8500/v1/kv/ssh/id_rsa
-  curl -Xs PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa.pub http://localhost:8500/v1/kv/ssh/id_rsa.pub
-}
-
-
-function generate_sshkeys()
-{
-  echo -e 'y\n'|ssh-keygen -b 4096 -f id_rsa -t rsa -q -N ''
+    log "Get ssh keys from Consul"
+    curl -s "http://${IPhc}:8500/v1/kv/ssh/id_rsa" | jq -r '.[0].Value' | base64 --decode > id_rsa
+    error_log "Fails to Get id_rsa"
+    curl -s "http://${IPhc}:8500/v1/kv/ssh/id_rsa.pub" | jq -r '.[0].Value' | base64 --decode > id_rsa.pub
+    error_log "Fails to Get id_rsa"
 }
 
 function fix_etc_hosts()
@@ -118,7 +149,7 @@ function fix_etc_hosts()
   log "Add hostame and ip in hosts file ..."
   #IP=$(ip addr show eth0 | grep inet | grep -v inet6 | awk '{ print $2; }' | sed 's?/.*$??')
   HOST=$(hostname)
-  echo "${IP}" "${HOST}" >>  "${HOST_FILE}"
+  echo "${IP}" "${HOST}" >> "${HOST_FILE}"
 }
 
 function myip()
@@ -127,13 +158,23 @@ function myip()
   echo "${IP}"
 }
 
+function activate_swarm()
+{
+  if [ "${INDEX}" = "1" ];then
+    token=$(docker swarm init | awk '/--token/{print $2;}')
+    curl -Xs PUT -d "${token}" http://${IPhc}:8500/v1/kv/swarm/token
+  else
+    token=$(curl -s "http://${IPhc}:8500/v1/kv/swarm/token" | jq -r '.[0].Value')
+    ipmanager=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/1/ip" | jq -r '.[0].Value')
+    docker swarm join --token "${token}" "${ipmanager}:2377"
+  fi
+}
+
 log "Execution of Install Script from CustomScript ..."
 
 ## Variables
-TERM=xterm
-ADMIN_USER="${1}"
-REPO="${2}"
 
+TERM=xterm
 IP=$(myip)
 
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
@@ -144,17 +185,34 @@ export ADMIN_USER ADMIN_HOME IP TERM
 
 log "CustomScript Directory is ${CWD}"
 
+BASH_SCRIPT="${0}"
+INDEX="${1}"
+ADMIN_USER="${2}"
+numberOfNodes="${3}"
+nodeSubnetRoot="${4}"
+nodeVmName="${5}"
+IPhc="${6}"
+
 HOST_FILE="/etc/hosts"
 
 ##
+
 fix_etc_hosts
-generate_sshkeys
-ssh_config
 install_docker
 install_docker_compose
-pull_images
-pull_compose
+activate_swarm
+register_node
+get_sshkeys
+ssh_config
+ssh_config_root
 
 log "Success : End of Execution of Install Script from CustomScript"
 
 exit 0
+
+
+
+
+
+
+###curl -s 10.0.0.145:8500/v1/kv/my_key/my_otehr_key/this_is_the_key?dc=dc1 | jq -r '.[0].Value' | base64 --decode
