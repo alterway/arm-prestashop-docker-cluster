@@ -229,7 +229,7 @@
     "cleanRGP":"[uniqueString(resourceGroup().id, deployment().name)]",
     "hcVmName":"[concat('jump', variables('cleanRGP'))]",
     "nodeAvailabilitySetName":"[concat('nodeav', variables('cleanRGP'))]",
-    "nodeVmName":"[concat('bdd', variables('cleanRGP'))]",
+    "nodeVmName":"[concat('node', variables('cleanRGP'))]",
     "nodeNetworkSecurityGroupName":"nodeSecurityGroup",
     "nodeSubnetRoot":"[concat( split(parameters('nodeSubnetPrefix'), '.')[0], '.', split(parameters('nodeSubnetPrefix'), '.')[1], '.', split(parameters('nodeSubnetPrefix'), '.')[2])]",
     "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]"
