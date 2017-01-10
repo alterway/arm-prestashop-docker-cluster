@@ -120,7 +120,8 @@
       "type":"string",
       "metadata": {
         "description":"Storage Account Name for Back VMs"
-      }
+      },
+      "defaultValue":"nodedockeraw"
     },
     "shopSize":{
       "type":"string",
@@ -373,9 +374,8 @@
       "type":"Microsoft.Resources/deployments",
       "apiVersion":"[variables('apiVersion').deployment]",
       "dependsOn":[
-        "[concat('Microsoft.Storage/storageAccounts/', toLower(variables('diagnosticsStorageAccountName')))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/',variables('nodeNetworkSecurityGroupName'))]",
-        "[concat('Microsoft.Network/virtualNetworks/',parameters('virtualNetworkName'))]"
+        "[concat('Microsoft.Resources/deployments/', 'SharedDeployment')]",
+        "[concat('Microsoft.Resources/deployments/', 'JumpBoxDeployment')]"
       ],
       "properties":{
         "mode":"Incremental",
