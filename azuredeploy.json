@@ -27,7 +27,7 @@
     },
     "adminPassword":{
       "type":"securestring",
-      "defaultValue":"changeme",
+      "defaultValue":"@zure3veryWhere",
       "metadata":{
         "description":"Password for the Virtual Machine. Not used if authenticationType of sshPublicKey."
       }
