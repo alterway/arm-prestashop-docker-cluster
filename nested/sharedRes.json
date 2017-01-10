@@ -76,6 +76,12 @@
       },
       "defaultValue": "nodeSecurityGroup"
     },
+    "nodeAvailabilitySetName":{
+      "type":"string",
+      "metadata": {
+        "description":"Name of availability set"
+      }
+    },
     "location":{
       "type":"string",
       "metadata":{
@@ -84,6 +90,8 @@
     }
   },
   "variables": {
+    "nodeFaultDomainCount":"2",
+    "nodeUpdateDomainCount":"3",
     "apiVersion":{
       "resources":{
         "deployments":"2015-01-01"
@@ -95,6 +103,16 @@
     }
    },
   "resources": [
+    { "comments":"OK: Availability Set for Back VMs",
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[parameters('nodeAvailabilitySetName')]",
+      "apiVersion": "[variables('apiVersion').network]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "PlatformFaultDomainCount": "[variables('nodeFaultDomainCount')]",
+        "PlatformUpdateDomainCount": "[variables('nodeUpdateDomainCount')]"
+      }
+    },
     { "comments":"Network Security Group for Jumpbox Control VM (JumpBox)",
       "apiVersion":"[variables('apiVersion').network]",
       "type":"Microsoft.Network/networkSecurityGroups",

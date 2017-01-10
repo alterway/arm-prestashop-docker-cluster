@@ -228,9 +228,6 @@
     },
     "cleanRGP":"[uniqueString(resourceGroup().id, deployment().name)]",
     "hcVmName":"[concat('jump', variables('cleanRGP'))]",
-
-    "nodeFaultDomainCount":"3",
-    "nodeUpdateDomainCount":"5",
     "nodeAvailabilitySetName":"[concat('nodeav', variables('cleanRGP'))]",
     "nodeVmName":"[concat('bdd', variables('cleanRGP'))]",
     "nodeNetworkSecurityGroupName":"nodeSecurityGroup",
@@ -303,6 +300,9 @@
           },
           "nodeSubnetPrefix":{
             "value":"[parameters('nodeSubnetPrefix')]"
+          },
+          "nodeAvailabilitySetName":{
+            "value":"[variables('nodeAvailabilitySetName')]"
           }
         }
       }
