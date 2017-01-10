@@ -240,11 +240,6 @@
         "[concat('Microsoft.Storage/storageAccounts/', toLower(parameters('nodeStorageAccountName')) ) ]",
         "[concat('Microsoft.Network/networkInterfaces/', variables('nodeNicName'),copyindex())]"
       ],
-      "plan": {
-        "publisher": "[variables('imagePublisher')]",
-        "product": "[variables('imageOffer')]",
-        "name": "[variables('sku')]"
-      },
       "properties":{
         "availabilitySet":{
           "id":"[resourceId('Microsoft.Compute/availabilitySets', parameters('nodeAvailabilitySetName'))]"
