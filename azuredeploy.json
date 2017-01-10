@@ -423,7 +423,7 @@
           "vnetID":{
             "value":"[variables('vnetID')]"
           },
-          "bkVmName":{
+          "nodeVmName":{
             "value":"[variables('nodeVmName')]"
           },
           "shopSize":{
