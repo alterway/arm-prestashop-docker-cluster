@@ -105,7 +105,7 @@ function install_docker()
     done
 
     log "Install software-properties-common ..."
-    until apt-get --yes install apt-transport-https ca-certificates wget curl unzip
+    until apt-get --yes install apt-transport-https ca-certificates wget curl unzip jq
     do
       log "Lock detected on apt-get while install Try again..."
       sleep 2
@@ -129,9 +129,9 @@ function install_docker_compose()
 function register_node()
 {
    log "register node to consul"
-   curl -Xs PUT -d "${IP}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/ip
-   curl -Xs PUT -d "0" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/state
-   curl -Xs PUT -d "${nodeVmName}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/hostname
+   curl -X PUT -d "${IP}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/ip
+   curl -X PUT -d "0" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/state
+   curl -X PUT -d "${nodeVmName}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/hostname
 }
 
 function get_sshkeys()
@@ -162,7 +162,7 @@ function activate_swarm()
 {
   if [ "${INDEX}" = "1" ];then
     token=$(docker swarm init | awk '/--token/{print $2;}')
-    curl -Xs PUT -d "${token}" http://${IPhc}:8500/v1/kv/swarm/token
+    curl -X PUT -d "${token}" http://${IPhc}:8500/v1/kv/swarm/token
   else
     token=$(curl -s "http://${IPhc}:8500/v1/kv/swarm/token" | jq -r '.[0].Value')
     ipmanager=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/1/ip" | jq -r '.[0].Value')

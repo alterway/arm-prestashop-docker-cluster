@@ -67,7 +67,7 @@ function install_docker()
     done
 
     log "Install software-properties-common ..."
-    until apt-get --yes install apt-transport-https ca-certificates wget curl unzip
+    until apt-get --yes install apt-transport-https ca-certificates wget curl unzip jq
     do
       log "Lock detected on apt-get while install Try again..."
       sleep 2
@@ -103,8 +103,8 @@ function pull_compose()
 
 function put_keys()
 {
-  curl -Xs PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa http://localhost:8500/v1/kv/ssh/id_rsa
-  curl -Xs PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa.pub http://localhost:8500/v1/kv/ssh/id_rsa.pub
+  curl -X PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa http://localhost:8500/v1/kv/ssh/id_rsa
+  curl -X PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa.pub http://localhost:8500/v1/kv/ssh/id_rsa.pub
 }
 
 
