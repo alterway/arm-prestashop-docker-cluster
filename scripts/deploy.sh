@@ -96,16 +96,16 @@ function pull_images()
 
 function pull_compose()
 {
-  mkdir -p "~${ADMIN_USER}"/docker/{consul,envconsul}
-  curl -fsSL "$REPO/docker/consul/docker-compose.yml" -o "~${ADMIN_USER}/docker/consul/docker-compose.yml"
-  chown -R  "${ADMIN_USER}" "~${ADMIN_USER}/docker"
-  docker-compose -f "~${ADMIN_USER}/docker/consul/docker-compose.yml" up -d
+  mkdir -p "${ADMIN_HOME}"/docker/{consul,envconsul}
+  curl -fsSL "$REPO/docker/consul/docker-compose.yml" -o "${ADMIN_HOME}/docker/consul/docker-compose.yml"
+  chown -R  "${ADMIN_USER}" "${ADMIN_HOME}/docker"
+  docker-compose -f "${ADMIN_HOME}/docker/consul/docker-compose.yml" up -d
 }
 
 function put_keys()
 {
-  curl -X PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa http://localhost:8500/v1/kv/ssh/id_rsa
-  curl -X PUT -d @"${ADMIN_HOME}"/.ssh/id_rsa.pub http://localhost:8500/v1/kv/ssh/id_rsa.pub
+  curl -X PUT -d @${ADMIN_HOME}/.ssh/id_rsa http://localhost:8500/v1/kv/ssh/id_rsa
+  curl -X PUT -d @${ADMIN_HOME}/.ssh/id_rsa.pub http://localhost:8500/v1/kv/ssh/id_rsa.pub
 }
 
 
@@ -131,19 +131,23 @@ function myip()
 log "Execution of Install Script from CustomScript ..."
 
 ## Variables
-TERM=xterm
+
+
+BASH_SCRIPT="${0}"
 ADMIN_USER="${1}"
 REPO="${2}"
+
+TERM=xterm
+HOST_FILE="/etc/hosts"
 
 IP=$(myip)
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 ADMIN_HOME=$(getent passwd "$ADMIN_USER" | cut -d: -f6)
 
-export ADMIN_USER ADMIN_HOME IP TERM REPO
+export ADMIN_USER ADMIN_HOME IP TERM REPO BASH_SCRIPT
+log "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$REPO 6:$BASH_SCRIPT"
 
 log "CustomScript Directory is ${CWD}"
-
-HOST_FILE="/etc/hosts"
 
 ##
 fix_etc_hosts
