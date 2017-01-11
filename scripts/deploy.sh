@@ -157,11 +157,11 @@ fix_etc_hosts
 install_packages
 generate_sshkeys
 ssh_config
-put_keys
 install_docker
 install_docker_compose
 pull_images
 pull_compose
+put_keys
 
 log "Success : End of Execution of Install Script from CustomScript"
 
