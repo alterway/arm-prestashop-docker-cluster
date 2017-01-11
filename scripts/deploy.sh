@@ -94,11 +94,13 @@ function install_docker_compose()
 
 function pull_images()
 {
+  log "pulling commander..."
   docker pull herveleclerc/azure-commander
 }
 
 function pull_compose()
 {
+  log "pulling compose files"
   mkdir -p "${ADMIN_HOME}"/docker/{consul,envconsul}
   curl -fsSL "$REPO/docker/consul/docker-compose.yml" -o "${ADMIN_HOME}/docker/consul/docker-compose.yml"
   chown -R  "${ADMIN_USER}" "${ADMIN_HOME}/docker"
@@ -114,6 +116,7 @@ function put_keys()
 
 function generate_sshkeys()
 {
+  log "Generating ssh keys..."
   echo -e 'y\n'|ssh-keygen -b 4096 -f id_rsa -t rsa -q -N ''
 }
 
@@ -134,7 +137,6 @@ function myip()
 log "Execution of Install Script from CustomScript ..."
 
 ## Variables
-
 
 BASH_SCRIPT="${0}"
 ADMIN_USER="${1}"
@@ -159,8 +161,8 @@ generate_sshkeys
 ssh_config
 install_docker
 install_docker_compose
-pull_images
 pull_compose
+pull_images
 put_keys
 
 log "Success : End of Execution of Install Script from CustomScript"
