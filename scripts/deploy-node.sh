@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 function usage()
  {
     echo "INFO:"
@@ -174,8 +174,17 @@ log "Execution of Install Script from CustomScript ..."
 
 ## Variables
 
+BASH_SCRIPT="${0}"
+INDEX="${1}"
+ADMIN_USER="${2}"
+numberOfNodes="${3}"
+nodeSubnetRoot="${4}"
+nodeVmName="${5}"
+IPhc="${6}"
+
 TERM=xterm
 IP=$(myip)
+HOST_FILE="/etc/hosts"
 
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 
@@ -185,16 +194,8 @@ export ADMIN_USER ADMIN_HOME IP TERM
 
 log "CustomScript Directory is ${CWD}"
 
-BASH_SCRIPT="${0}"
-INDEX="${1}"
-ADMIN_USER="${2}"
-numberOfNodes="${3}"
-nodeSubnetRoot="${4}"
-nodeVmName="${5}"
-IPhc="${6}"
-
-HOST_FILE="/etc/hosts"
-
+##
+env
 ##
 
 fix_etc_hosts
@@ -209,10 +210,5 @@ ssh_config_root
 log "Success : End of Execution of Install Script from CustomScript"
 
 exit 0
-
-
-
-
-
 
 ###curl -s 10.0.0.145:8500/v1/kv/my_key/my_otehr_key/this_is_the_key?dc=dc1 | jq -r '.[0].Value' | base64 --decode
