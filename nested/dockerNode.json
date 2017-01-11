@@ -114,7 +114,7 @@
   },
   "variables":{
     "linuxConfiguration_sshPublicKey": {
-      "disablePasswordAuthentication": "false",
+      "disablePasswordAuthentication": "true",
       "ssh": {
         "publicKeys": [
           {

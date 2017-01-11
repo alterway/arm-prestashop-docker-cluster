@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  mysql-master:
+    image: bitnami/mysql:latest
+    ports:
+      - 3306
+    volumes:
+      - lib_mysql:/bitnami/mysql
+    environment:
+      - MYSQL_REPLICATION_MODE=master
+      - MYSQL_REPLICATION_USER=replicator
+      - MYSQL_REPLICATION_PASSWORD=r3plicat0r
+      - MYSQL_ROOT_PASSWORD=t00r
+      - MYSQL_USER=prestashop
+      - MYSQL_PASSWORD=pr3stash0p
+      - MYSQL_DATABASE=prestashopdb
+      - "constraint:node==node01"
+    networks:
+      - mysql-net
+
+  mysql-slave:
+    image: bitnami/mysql:latest
+    ports:
+      - 3306
+    volumes:
+      - lib_mysql:/bitnami/mysql
+    depends_on:
+      - mysql-master
+    environment:
+      - MYSQL_REPLICATION_MODE=slave
+      - MYSQL_REPLICATION_USER=replicator
+      - MYSQL_REPLICATION_PASSWORD=r3plicat0r
+      - MYSQL_MASTER_HOST=mysql-master
+      - MYSQL_MASTER_PORT=3306
+      - MYSQL_MASTER_USER=prestashop
+      - MYSQL_MASTER_PASSWORD=pr3stash0p
+      - MYSQL_ROOT_PASSWORD=t00r
+      - MYSQL_USER=prestashop
+      - MYSQL_PASSWORD=pr3stash0p
+      - MYSQL_DATABASE=prestashopdb
+      - "constraint:node==node02"
+    networks:
+      - mysql-net
+
+volumes:
+  lib_mysql:
+    driver: local
+networks:
+  mysql-net:
+    driver: overlay
+
+
+
