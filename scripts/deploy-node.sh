@@ -127,6 +127,7 @@ function install_docker()
 
 function install_docker_compose()
 {
+  log "Install docker-compose ..."
   curl -L "https://github.com/docker/compose/releases/download/1.9.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
   chmod +x /usr/local/bin/docker-compose
   docker-compose --version
@@ -179,8 +180,19 @@ function activate_swarm()
     token=$(docker swarm init | awk '/--token/{print $2;}')
     curl -X PUT -d "${token}" http://${IPhc}:8500/v1/kv/swarm/token
   else
-    token=$(curl -s "http://${IPhc}:8500/v1/kv/swarm/token" | jq -r '.[0].Value' | base64 --decode)
-    ipmanager=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/1/ip" | jq -r '.[0].Value' | base64 --decode)
+    c=0
+    while :
+    do
+      token=$(curl -s "http://${IPhc}:8500/v1/kv/swarm/token" | jq -r '.[0].Value' | base64 --decode)
+      ipmanager=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/1/ip" | jq -r '.[0].Value' | base64 --decode)
+      if [ "x$token" = "x" ]; then
+         let c=${c}+1
+         if [ "${c}" -gt 9 ]; then
+           log "Timeout to get token exiting ..."
+           exit 1
+         fi
+      fi
+    done
     docker swarm join --token "${token}" "${ipmanager}:2377"
   fi
 }
