@@ -18,6 +18,7 @@ function log()
 {
   mess="$(hostname): $1"
   logger -t "${BASH_SCRIPT}" "${mess}"
+  echo "${BASH_SCRIPT}" "${mess}" >> /tmp/${BASH_SCRIPT}.log
 }
 
 function ssh_config()

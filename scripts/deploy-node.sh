@@ -21,6 +21,8 @@ function log()
 
   logger -t "${BASH_SCRIPT}" "${mess}"
 
+  echo "${BASH_SCRIPT}" "${mess}" >> /tmp/${BASH_SCRIPT}.log
+
 }
 
 function ssh_config()
@@ -193,6 +195,7 @@ ADMIN_HOME=$(getent passwd "$ADMIN_USER" | cut -d: -f6)
 export ADMIN_USER ADMIN_HOME IP TERM INDEX numberOfNodes nodeSubnetRoot IPhc BASH_SCRIPT
 
 echo "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$INDEX 6:$numberOfNodes 7:$nodeSubnetRoot 8:$IPhc 9:$BASH_SCRIPT"
+log "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$INDEX 6:$numberOfNodes 7:$nodeSubnetRoot 8:$IPhc 9:$BASH_SCRIPT"
 
 log "CustomScript Directory is ${CWD}"
 
