@@ -58,9 +58,9 @@ function ssh_config()
 
 }
 
-function install_docker()
+function install_packages()
 {
-    log "Update System ..."
+log "Update System ..."
     until apt-get --yes update
     do
       log "Lock detected on apt-get while install Try again..."
@@ -73,7 +73,10 @@ function install_docker()
       log "Lock detected on apt-get while install Try again..."
       sleep 2
     done
+}
 
+function install_docker()
+{
     log "Install Docker ..."
 
     curl -fsSL https://test.docker.com/ | sh
@@ -151,6 +154,7 @@ log "CustomScript Directory is ${CWD}"
 
 ##
 fix_etc_hosts
+install_packages
 generate_sshkeys
 ssh_config
 put_keys

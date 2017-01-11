@@ -97,9 +97,9 @@ function ssh_config_root()
   error_log "Unable to chmod root authorized_keys file"
 }
 
-function install_docker()
+function install_packages()
 {
-    log "Update System ..."
+log "Update System ..."
     until apt-get --yes update
     do
       log "Lock detected on apt-get while install Try again..."
@@ -112,7 +112,11 @@ function install_docker()
       log "Lock detected on apt-get while install Try again..."
       sleep 2
     done
+}
 
+
+function install_docker()
+{
     log "Install Docker ..."
 
     curl -fsSL https://test.docker.com/ | sh
@@ -148,7 +152,6 @@ function register_node()
 
 function get_sshkeys()
  {
-
     log "Get ssh keys from Consul"
     curl -s "http://${IPhc}:8500/v1/kv/ssh/id_rsa" | jq -r '.[0].Value' | base64 --decode > id_rsa
     error_log "Fails to Get id_rsa"
@@ -214,6 +217,7 @@ env
 ##
 
 fix_etc_hosts
+install_packages
 register_node
 get_sshkeys
 ssh_config
