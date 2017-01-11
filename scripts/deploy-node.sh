@@ -134,6 +134,16 @@ function register_node()
    curl -X PUT -d "${IP}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/ip
    curl -X PUT -d "0" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/state
    curl -X PUT -d "${nodeVmName}" http://${IPhc}:8500/v1/kv/nodes/${INDEX}/hostname
+
+   ip=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/${INDEX}/ip" | jq -r '.[0].Value' | base64 --decode)
+   log "ipnode =$ip"
+
+   state=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/${INDEX}/state" | jq -r '.[0].Value' | base64 --decode)
+   log "state =$state"
+
+   hostname=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/${INDEX}/hostname" | jq -r '.[0].Value' | base64 --decode)
+   log "hostname =$hostname"
+
 }
 
 function get_sshkeys()
@@ -166,8 +176,8 @@ function activate_swarm()
     token=$(docker swarm init | awk '/--token/{print $2;}')
     curl -X PUT -d "${token}" http://${IPhc}:8500/v1/kv/swarm/token
   else
-    token=$(curl -s "http://${IPhc}:8500/v1/kv/swarm/token" | jq -r '.[0].Value')
-    ipmanager=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/1/ip" | jq -r '.[0].Value')
+    token=$(curl -s "http://${IPhc}:8500/v1/kv/swarm/token" | jq -r '.[0].Value' | base64 --decode)
+    ipmanager=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/1/ip" | jq -r '.[0].Value' | base64 --decode)
     docker swarm join --token "${token}" "${ipmanager}:2377"
   fi
 }
