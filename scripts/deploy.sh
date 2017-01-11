@@ -135,12 +135,10 @@ ADMIN_USER="${1}"
 REPO="${2}"
 
 IP=$(myip)
-
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
-
 ADMIN_HOME=$(getent passwd "$ADMIN_USER" | cut -d: -f6)
 
-export ADMIN_USER ADMIN_HOME IP TERM
+export ADMIN_USER ADMIN_HOME IP TERM REPO
 
 log "CustomScript Directory is ${CWD}"
 
@@ -150,6 +148,7 @@ HOST_FILE="/etc/hosts"
 fix_etc_hosts
 generate_sshkeys
 ssh_config
+put_keys
 install_docker
 install_docker_compose
 pull_images

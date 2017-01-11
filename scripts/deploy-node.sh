@@ -1,6 +1,6 @@
 #!/bin/bash -x
 function usage()
- {
+{
     echo "INFO:"
     echo "Usage: deploy-node.sh index admin #nodes subnet vmname"
 }
@@ -190,7 +190,9 @@ CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 
 ADMIN_HOME=$(getent passwd "$ADMIN_USER" | cut -d: -f6)
 
-export ADMIN_USER ADMIN_HOME IP TERM
+export ADMIN_USER ADMIN_HOME IP TERM INDEX numberOfNodes nodeSubnetRoot IPhc BASH_SCRIPT
+
+echo "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$INDEX 6:$numberOfNodes 7:$nodeSubnetRoot 8:$IPhc 9:$BASH_SCRIPT"
 
 log "CustomScript Directory is ${CWD}"
 
@@ -199,16 +201,14 @@ env
 ##
 
 fix_etc_hosts
-install_docker
-install_docker_compose
-activate_swarm
 register_node
 get_sshkeys
 ssh_config
 ssh_config_root
+install_docker
+install_docker_compose
+activate_swarm
 
 log "Success : End of Execution of Install Script from CustomScript"
 
 exit 0
-
-###curl -s 10.0.0.145:8500/v1/kv/my_key/my_otehr_key/this_is_the_key?dc=dc1 | jq -r '.[0].Value' | base64 --decode
