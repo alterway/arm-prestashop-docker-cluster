@@ -186,13 +186,17 @@ function activate_swarm()
       token=$(curl -s "http://${IPhc}:8500/v1/kv/swarm/token" | jq -r '.[0].Value' | base64 --decode)
       ipmanager=$(curl -s "http://${IPhc}:8500/v1/kv/nodes/1/ip" | jq -r '.[0].Value' | base64 --decode)
       if [ "x$token" = "x" ]; then
+         sleep 60
          let c=${c}+1
          if [ "${c}" -gt 9 ]; then
-           log "Timeout to get token exiting ..."
+           log "[ERROR] : Timeout to get token exiting ..."
            exit 1
          fi
+      else
+         break
       fi
     done
+    log "Join Swarm manager on ${ipmanager}:2377 with token ${token}"
     docker swarm join --token "${token}" "${ipmanager}:2377"
   fi
 }
