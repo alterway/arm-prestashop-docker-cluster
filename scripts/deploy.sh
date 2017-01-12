@@ -79,7 +79,7 @@ function install_docker()
 {
     log "Install Docker ..."
 
-    curl -fsSL https://test.docker.com/ | sh
+    curl -fsSL https://experimental.docker.com/ | sh
 
     usermod -aG docker "${ADMIN_USER}"
 
