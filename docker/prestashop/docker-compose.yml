@@ -5,7 +5,7 @@ services:
   httpd:
     image: alterway/httpd-prestashop:latest
     volumes:
-      - "presta_shop:/var/www/"
+      - "prestashop:/var/www/"
     environment:
       HTTPD__DocumentRoot: "/var/www"
       HTTPD_a2enmod: "rewrite status expires headers deflate remoteip"
@@ -21,7 +21,7 @@ services:
   php:
     image: alterway/prestashop-php:5.6-fpm
     volumes:
-      - "presta_shop:/var/www/"
+      - "prestashop:/var/www/"
     environment:
       PHP_php5enmod: "bcmath mbstring pcntl zip pdo_mysql mysqli opcache gd "
       PHP__date.timezone: '"Europe/Paris"'

@@ -130,6 +130,20 @@
       },
       "defaultValue":"nodeSecurityGroup"
     },
+    "dnsNameForNodePublicIP":{
+      "type":"string",
+      "metadata":{
+        "description":"Dns Name for LB Node"
+      },
+      "defaultValue":"lbnodeaw"
+    },
+    "nodePublicIPAddressName":{
+      "type":"string",
+      "defaultValue":"nodePublicIP",
+      "metadata":{
+        "description":"Public IP address Name for LB"
+      }
+    },
     "shopSize":{
       "type":"string",
       "defaultValue":"Small",
@@ -207,6 +221,7 @@
     }
   },
   "variables":{
+    "nodePublicIPAddressType":"Dynamic",
     "configuration":{
       "sharTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/sharedRes.json')]",
       "jumpTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/jumpBox.json')]",
@@ -224,7 +239,8 @@
       "network":"2016-03-30",
       "storage":"2015-06-15",
       "compute":"2015-06-15",
-      "deployment":"2016-02-01"
+      "deployment":"2016-02-01",
+      "publicIPAddresses":"2016-09-01"
     },
     "cleanRGP":"[uniqueString(resourceGroup().id, deployment().name)]",
     "hcVmName":"[concat('jump', variables('cleanRGP'))]",
@@ -244,6 +260,19 @@
         "publicIPAllocationMethod":"[variables('hcPublicIPAddressType')]",
         "dnsSettings":{
           "domainNameLabel":"[parameters('dnsNameForJumpboxPublicIP')]"
+        }
+      }
+    },
+    {
+      "comments":"Public IP for Node Load Balancer",
+      "apiVersion":"[variables('apiVersion').network]",
+      "type":"Microsoft.Network/publicIPAddresses",
+      "name":"[parameters('nodePublicIPAddressName')]",
+      "location":"[parameters('location')]",
+      "properties":{
+        "publicIPAllocationMethod":"[variables('nodePublicIPAddressType')]",
+        "dnsSettings":{
+          "domainNameLabel":"[parameters('dnsNameForNodePublicIP')]"
         }
       }
     },
@@ -391,7 +420,8 @@
       "apiVersion":"[variables('apiVersion').deployment]",
       "dependsOn":[
         "[concat('Microsoft.Resources/deployments/', 'SharedDeployment')]",
-        "[concat('Microsoft.Resources/deployments/', 'JumpBoxDeployment')]"
+        "[concat('Microsoft.Resources/deployments/', 'JumpBoxDeployment')]",
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('nodePublicIPAddressName'))]"
       ],
       "properties":{
         "mode":"Incremental",
@@ -453,6 +483,9 @@
           },
           "hcprivateIPAddress":{
             "value":"[variables('hcprivateIPAddress')]"
+          },
+          "nodePublicIPAddressName": {
+            "value":"[parameters('nodePublicIPAddressName')]"
           }
         }
       }
@@ -461,6 +494,10 @@
   "outputs": {
     "Jumpbox_FQDN": {
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('hcPublicIPAddressName')), variables('apiVersion').network).dnsSettings.fqdn]",
+      "type": "string"
+    },
+    "NODE_FQDN": {
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('nodePublicIPAddressName')), variables('apiVersion').publicIPAddresses).dnsSettings.fqdn]",
       "type": "string"
     }
   }

@@ -119,7 +119,7 @@ function install_docker()
 {
     log "Install Docker ..."
 
-    curl -fsSL https://test.docker.com/ | sh
+    curl -fsSL https://experimental.docker.com/ | sh
 
     usermod -aG docker "${ADMIN_USER}"
 
@@ -135,7 +135,7 @@ function get_application()
 function start_application()
 {
   if [ "${INDEX}" = "1" ];then
-    docker deploy --compose-file "${ADMIN_HOME}/docker-compose.yml"
+    docker deploy --compose-file "${ADMIN_HOME}/docker-compose.yml" prestashop
   fi
 }
 

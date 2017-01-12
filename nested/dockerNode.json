@@ -105,6 +105,12 @@
         "description":"IP priv Jumpbox"
       }
     },
+    "nodePublicIPAddressName":{
+      "type":"string",
+      "metadata":{
+        "description":"nodePublicIP"
+      }
+    },
     "location":{
       "type":"string",
       "metadata":{
@@ -113,6 +119,14 @@
     }
   },
   "variables":{
+    "cleanRGP":"[uniqueString(resourceGroup().id, deployment().name)]",
+    "nodeLBName":"[concat('lb', variables('cleanRGP'))]",
+    "lbPublicIPAddressID":"[resourceId('Microsoft.Network/publicIPAddresses',parameters('nodePublicIPAddressName'))]",
+    "lbID":"[resourceId('Microsoft.Network/loadBalancers',variables('nodeLBName'))]",
+    "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
+    "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/LoadBalancerBackend')]",
+    "nodeIPConfigID":"[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontend')]",
+
     "linuxConfiguration_sshPublicKey": {
       "disablePasswordAuthentication": "true",
       "ssh": {
@@ -159,6 +173,85 @@
   },
   "resources":[
     {
+      "comments":"Load Balancer Definition for Node VM",
+      "apiVersion":"[variables('apiVersion').compute]",
+      "name":"[variables('nodeLBName')]",
+      "type":"Microsoft.Network/loadBalancers",
+      "location":"[parameters('location')]",
+      "dependsOn":[
+      ],
+      "properties":{
+        "frontendIPConfigurations":[
+          {
+            "name":"LoadBalancerNode",
+            "properties":{
+              "publicIPAddress":{
+                "id":"[variables('lbPublicIPAddressID')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools":[
+          {
+            "name":"LoadBalancerBackend"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "LBRuleHttp",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('nodeIPConfigID')]"
+              },
+              "backendAddressPool": {
+                "id": "[variables('lbPoolID')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution": "SourceIP",
+              "probe": {
+                "id": "[variables('lbProbeID')]"
+              }
+            }
+          },
+          {
+            "name": "LBRuleHttps",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('nodeIPConfigID')]"
+              },
+              "backendAddressPool": {
+                "id": "[variables('lbPoolID')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 443,
+              "backendPort": 443,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution": "SourceIP",
+              "probe": {
+                "id": "[variables('lbProbeID')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "tcpProbe",
+            "properties": {
+              "protocol": "tcp",
+              "port": 80,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
+    {
       "comments":"Global Storage Account for the Docker VM",
       "type":"Microsoft.Storage/storageAccounts",
       "name":"[toLower(parameters('nodeStorageAccountName'))]",
@@ -179,6 +272,7 @@
         "count":"[parameters('numberOfNodes')]"
       },
       "dependsOn":[
+        "[concat('Microsoft.Network/loadBalancers/', variables('nodeLBName'))]"
       ],
       "properties":{
         "dnsSettings":{
@@ -192,7 +286,12 @@
               "privateIPAddress":"[concat(parameters('nodeSubnetRoot'), '.',add(copyindex(),4) )]",
               "subnet":{
                 "id":"[variables('nodeSubnetRef')]"
-              }
+              },
+              "loadBalancerBackendAddressPools":[
+                {
+                  "id":"[concat(variables('lbID'), '/backendAddressPools/LoadBalancerBackend')]"
+                }
+              ]
             }
           }
         ]
