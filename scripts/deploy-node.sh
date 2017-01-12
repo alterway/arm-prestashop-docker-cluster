@@ -128,8 +128,17 @@ function install_docker()
 function get_application()
 {
   log "Download docker-compose for application"
-  curl -L "" -o "${ADMIN_HOME}/docker-compose.yml"
+  url="https://raw.githubusercontent.com/alterway/arm-prestashop-docker-cluster/master/docker/prestashop/docker-compose.yml"
+  curl -L "${url}" -o "${ADMIN_HOME}/docker-compose.yml"
 }
+
+function start_application()
+{
+  if [ "${INDEX}" = "1" ];then
+    docker deploy --compose-file "${ADMIN_HOME}/docker-compose.yml"
+  fi
+}
+
 
 function install_docker_compose()
 {
@@ -138,6 +147,7 @@ function install_docker_compose()
   chmod +x /usr/local/bin/docker-compose
   docker-compose --version
 }
+
 
 function register_node()
 {
@@ -247,6 +257,7 @@ install_docker
 install_docker_compose
 activate_swarm
 get_application
+start_application
 
 log "Success : End of Execution of Install Script from CustomScript"
 
