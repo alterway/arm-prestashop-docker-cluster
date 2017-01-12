@@ -199,6 +199,9 @@
         "loadBalancingRules": [
           {
             "name": "LBRuleHttp",
+            "dependsOn": [
+              "[variables('nodeIPConfigID')]"
+            ],
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[variables('nodeIPConfigID')]"
@@ -219,6 +222,9 @@
           },
           {
             "name": "LBRuleHttps",
+            "dependsOn": [
+              "[variables('nodeIPConfigID')]"
+            ],
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[variables('nodeIPConfigID')]"
