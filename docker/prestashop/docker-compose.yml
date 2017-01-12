@@ -44,6 +44,34 @@ services:
     networks:
       - mysql-net
 
+phpcli:
+    image: alterway/prestashop-php:5.6-cli
+    volumes:
+      - "prestashop:/var/www/"
+    environment:
+      PHP_php5enmod: "bcmath mbstring pcntl zip pdo_mysql mysqli opcache gd "
+      PHP__date.timezone: '"Europe/Paris"'
+      PHP__memory_limit: "512M"
+      PHP__file_uploads: "on"
+      PHP__max_file_uploads: "20"
+      PHP__upload_max_filesize: "32M"
+      PHP__max_execution_time: "60"
+      PHP__max_input_time: "180"
+      PHP__opcache.enable: "on"
+      PHP__display_errors: "On"
+      MYSQL_DATABASE: prestashopdb
+      MYSQL_USER: prestashop
+      MYSQL_PASSWORD: pr3stash0p
+      MYSQL_HOST: "mysql-master"
+      DOMAIN: demo.local
+      VIRTUAL_HOST: ${SHOPNAME}.demo.local
+    entrypoint : /bin/bash -xc "sleep 40 ; /entrypoint.sh /var/www/install/index_cli.php --domain=${SHOPNAME}.demo.local --db_server=mysql --db_name=${MYSQL_DATABASE} --db_user=${MYSQL_USER} --db_password=${MYSQL_PASSWORD} --firstname=alter --lastname=way --password=${MYSQL_PASSWORD} --email=admin@alterway.fr --newsletter=0 --send_email=0 ;  chmod -R a+rw /var/www ; rm -rf /var/www/install"
+    networks:
+      - mysql-net
+    depends_on:
+      - php
+      - mysql
+
   mysql-master:
     image: bitnami/mysql:latest
     ports:

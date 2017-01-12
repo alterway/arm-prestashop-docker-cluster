@@ -242,6 +242,8 @@ CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 ADMIN_HOME=$(getent passwd "$ADMIN_USER" | cut -d: -f6)
 HOSTNAME=$(hostname)
 
+export SHOPNAME=alterway
+
 export ADMIN_USER ADMIN_HOME IP TERM INDEX numberOfNodes nodeSubnetRoot IPhc BASH_SCRIPT HOSTNAME
 
 echo "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$INDEX 6:$numberOfNodes 7:$nodeSubnetRoot 8:$IPhc 9:$BASH_SCRIPT"
