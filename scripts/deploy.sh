@@ -79,7 +79,13 @@ function install_docker()
 {
     log "Install Docker ..."
 
-    curl -fsSL https://experimental.docker.com/ | sh
+    curl -fsSL https://test.docker.com/ | sh
+
+    log "activate experimental flag"
+    echo '{ "experimental": true }' > /etc/docker/daemon.json
+
+    log "restarting service"
+    service docker restart
 
     usermod -aG docker "${ADMIN_USER}"
 
