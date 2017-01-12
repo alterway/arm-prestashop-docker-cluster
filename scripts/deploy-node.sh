@@ -125,6 +125,12 @@ function install_docker()
 
 }
 
+function get_application()
+{
+  log "Download docker-compose for application"
+  curl -L "" -o "${ADMIN_HOME}/docker-compose.yml"
+}
+
 function install_docker_compose()
 {
   log "Install docker-compose ..."
@@ -240,6 +246,7 @@ ssh_config_root
 install_docker
 install_docker_compose
 activate_swarm
+get_application
 
 log "Success : End of Execution of Install Script from CustomScript"
 
