@@ -107,7 +107,7 @@ log "Update System ..."
     done
 
     log "Install software-properties-common ..."
-    until apt-get --yes install apt-transport-https ca-certificates wget curl unzip jq
+    until apt-get --yes install apt-transport-https ca-certificates wget curl unzip jq pwgen
     do
       log "Lock detected on apt-get while install Try again..."
       sleep 2
@@ -134,17 +134,32 @@ function install_docker()
 function get_application()
 {
   log "Download docker-compose for application"
-  url="https://raw.githubusercontent.com/alterway/arm-prestashop-docker-cluster/master/docker/prestashop/docker-compose.yml"
-  curl -L "${url}" -o "${ADMIN_HOME}/docker-compose.yml"
+  mkdir -p "${ADMIN_HOME}/env"
+  url="https://raw.githubusercontent.com/alterway/arm-prestashop-docker-cluster/master/docker/prestashop"
+
+  curl -L "${url}/docker-compose.yml" -o "${ADMIN_HOME}/docker-compose.yml"
+  curl -L "${url}/env/apache.env" -o "${ADMIN_HOME}/env/apache.env"
+  curl -L "${url}/env/mysql.env" -o "${ADMIN_HOME}/env/mysql.env"
+  curl -L "${url}/env/php.env" -o "${ADMIN_HOME}/env/php.env"
+  curl -L "${url}/env/php-fpm.env" -o "${ADMIN_HOME}/env/php-fpm.env"
 }
 
 function start_application()
 {
+  # environment
+   MYSQL_REPLICATION_PASSWORD=$(pwgen -1 12 1)
+
+   log "replication password is : ${MYSQL_REPLICATION_PASSWORD}"
+
+   NODE1=$(docker node ls | awk '/Leader/ { print $3; }')
+   NODE2=$(docker node ls | grep -v "$NODE1" | grep -v HOSTNAME | awk '{ print $2; }')
+
+   export MYSQL_REPLICATION_PASSWORD NODE1 NODE2
+
   if [ "${INDEX}" = "1" ];then
     docker deploy --compose-file "${ADMIN_HOME}/docker-compose.yml" prestashop
   fi
 }
-
 
 function install_docker_compose()
 {
@@ -196,6 +211,13 @@ function myip()
   echo "${IP}"
 }
 
+function get_var()
+{
+  pos="${1}"
+  var=$(echo "${VARS}" |cut -f$pos -d';')
+  echo "${var}"
+}
+
 function activate_swarm()
 {
   if [ "${INDEX}" = "1" ];then
@@ -234,6 +256,7 @@ numberOfNodes="${3}"
 nodeSubnetRoot="${4}"
 nodeVmName="${5}"
 IPhc="${6}"
+VARS="${7}"
 
 TERM=xterm
 IP=$(myip)
@@ -242,9 +265,21 @@ CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 ADMIN_HOME=$(getent passwd "$ADMIN_USER" | cut -d: -f6)
 HOSTNAME=$(hostname)
 
-export SHOPNAME=alterway
+export ADMIN_USER ADMIN_HOME IP TERM INDEX numberOfNodes nodeSubnetRoot IPhc BASH_SCRIPT HOSTNAME VARS
 
-export ADMIN_USER ADMIN_HOME IP TERM INDEX numberOfNodes nodeSubnetRoot IPhc BASH_SCRIPT HOSTNAME
+SHOPNAME=$(get_var 1)
+PRESTASHOP_FIRSTNAME=$(get_var 2)
+PRESTASHOP_LASTNAME=$(get_var 3)
+PRESTASHOP_EMAIL=$(get_var 4)
+PRESTASHOP_PASSWORD=$(get_var 5)
+MYSQL_DATABASE=$(get_var 6)
+MYSQL_USER=$(get_var 7)
+MYSQL_PASSWORD=$(get_var 8)
+MYSQL_ROOT_PASSWORD=$(get_var 9)
+MYSQL_REPLICATION_USER=$(get_var 10)
+
+export SHOPNAME PRESTASHOP_FIRSTNAME PRESTASHOP_LASTNAME PRESTASHOP_EMAIL PRESTASHOP_PASSWORD
+export MYSQL_DATABASE MYSQL_USER MYSQL_PASSWORD MYSQL_ROOT_PASSWORD  MYSQL_REPLICATION_USER
 
 echo "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$INDEX 6:$numberOfNodes 7:$nodeSubnetRoot 8:$IPhc 9:$BASH_SCRIPT"
 log "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$INDEX 6:$numberOfNodes 7:$nodeSubnetRoot 8:$IPhc 9:$BASH_SCRIPT"

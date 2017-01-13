@@ -212,6 +212,48 @@
       },
       "defaultValue":"hc-subnet"
     },
+    "mysql_database":{
+      "type":"string",
+      "metadata":{
+        "description":"Name of prestashop database"
+      },
+      "defaultValue":"prestashopdb"
+    },
+    "mysql_user":{
+      "type":"string",
+      "metadata":{
+        "description":"Mysql user for prestashop database"
+      },
+      "defaultValue":"prestashop"
+    },
+    "mysql_password":{
+      "type":"securestring",
+      "metadata":{
+        "description":"Mysql user for prestashop database"
+      },
+      "defaultValue":"pr3stash0p"
+    },
+    "mysql_root_password":{
+      "type":"securestring",
+      "metadata":{
+        "description":"Mysql root password"
+      },
+      "defaultValue":"t00rp3ssw0rd"
+    },
+    "mysql_replication_user":{
+      "type":"string",
+      "metadata":{
+        "description":"Mysql user name for replication"
+      },
+      "defaultValue":"replicator"
+    },
+    "shopname":{
+      "type":"string",
+      "metadata":{
+        "description":"Shop Name"
+      },
+      "defaultValue":"shop-aw"
+    },
     "location":{
       "type":"string",
       "metadata": {
@@ -227,8 +269,8 @@
       "jumpTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/jumpBox.json')]",
       "nodeTemplateURL":"[concat(parameters('templatesBaseURL'),'/nested/dockerNode.json')]"
     },
-    "diagnosticsStorageAccountName": "[concat(uniqueString(resourceGroup().id),'diag')]",
-    "diagnosticsStorageAccountType": "Standard_LRS",
+    "diagnosticsStorageAccountName":"[concat(uniqueString(resourceGroup().id),'diag')]",
+    "diagnosticsStorageAccountType":"Standard_LRS",
     "hcPublicIPAddressType":"Dynamic",
     "hcSubnetRoot":"[concat( split(parameters('hcSubnetPrefix'), '.')[0], '.', split(parameters('hcSubnetPrefix'), '.')[1], '.', split(parameters('hcSubnetPrefix'), '.')[2])]",
     "hcprivateIPAddress":"[concat(variables('hcSubnetRoot'),'.4')]",
@@ -246,9 +288,11 @@
     "hcVmName":"[concat('jump', variables('cleanRGP'))]",
     "nodeAvailabilitySetName":"[concat('nodeav', variables('cleanRGP'))]",
     "nodeVmName":"[concat('node', variables('cleanRGP'))]",
-    "nodeNetworkSecurityGroupName":"nodeSecurityGroup",
     "nodeSubnetRoot":"[concat( split(parameters('nodeSubnetPrefix'), '.')[0], '.', split(parameters('nodeSubnetPrefix'), '.')[1], '.', split(parameters('nodeSubnetPrefix'), '.')[2])]",
-    "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]"
+    "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
+    "prestashop_vars":"[concat(parameters('shopname'),';',parameters('prestashop_firstname'),';',parameters('prestashop_lastname'),';',parameters('prestashop_email'),';',parameters('prestashop_password'))]",
+    "mysql_vars":"[concat(parameters('mysql_database'),';',parameters('mysql_user'),';',parameters('mysql_password'),';',parameters('mysql_root_password'),';',parameters('mysql_replication_user'))]",
+    "vars":"[concat(variables('prestashop_vars'),';',variables('mysql_vars'))]"
   },
   "resources":[
     { "comments":"OK: Public IP for Jumpbox Control VM (JumpBox)",
@@ -486,6 +530,9 @@
           },
           "nodePublicIPAddressName": {
             "value":"[parameters('nodePublicIPAddressName')]"
+          },
+          "vars": {
+            "value":"[variables('vars')]"
           }
         }
       }
@@ -493,12 +540,12 @@
   ],
   "outputs": {
     "Jumpbox_FQDN": {
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('hcPublicIPAddressName')), variables('apiVersion').network).dnsSettings.fqdn]",
-      "type": "string"
+      "value":"[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('hcPublicIPAddressName')), variables('apiVersion').network).dnsSettings.fqdn]",
+      "type":"string"
     },
     "NODE_FQDN": {
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('nodePublicIPAddressName')), variables('apiVersion').publicIPAddresses).dnsSettings.fqdn]",
-      "type": "string"
+      "value":"[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('nodePublicIPAddressName')), variables('apiVersion').publicIPAddresses).dnsSettings.fqdn]",
+      "type":"string"
     }
   }
 }

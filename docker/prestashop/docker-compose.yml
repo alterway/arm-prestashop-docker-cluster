@@ -6,16 +6,9 @@ services:
     image: alterway/httpd-prestashop:latest
     volumes:
       - "prestashop:/var/www/"
-    environment:
-      HTTPD__DocumentRoot: "/var/www"
-      HTTPD_a2enmod: "rewrite status expires headers deflate remoteip"
-      HTTPD__DirectoryIndex: "index.php index.html"
-      HTTPD_Directory_AllowOverride: "All"
-      HTTPD_Directory_Options: "-Indexes +FollowSymLinks"
-      HTTPD__LogFormat:  '"%a %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" common'
-      HTTPD__RemoteIPHeader: "X-Real-IP"
-      PHPFPM: "php:9000"
-      PHPFPM_CONFIG: "timeout=65 retry=5 ping=2"
+    env_file:
+      - env/apache.env
+      - env/php-fpm.env
     ports:
       - 80:80
     networks:
@@ -23,22 +16,14 @@ services:
   php:
     image: alterway/prestashop-php:5.6-fpm
     volumes:
-      - "prestashop:/var/www/"
+      - prestashop:/var/www/
+    env_file:
+      - env/php.env
+      - env/mysql.env
     environment:
-      PHP_php5enmod: "bcmath mbstring pcntl zip pdo_mysql mysqli opcache gd "
-      PHP__date.timezone: '"Europe/Paris"'
-      PHP__memory_limit: "512M"
-      PHP__file_uploads: "on"
-      PHP__max_file_uploads: "20"
-      PHP__upload_max_filesize: "32M"
-      PHP__max_execution_time: "60"
-      PHP__max_input_time: "180"
-      PHP__opcache.enable: "on"
-      PHP__display_errors: "Off"
-      MYSQL_DATABASE: prestashopdb
-      MYSQL_USER: prestashop
-      MYSQL_PASSWORD: pr3stash0p
-      MYSQL_HOST: "mysql-master"
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
       DOMAIN: demo.local
       VIRTUAL_HOST: ${SHOPNAME}.demo.local
     networks:
@@ -47,25 +32,17 @@ services:
   phpcli:
     image: alterway/prestashop-php:5.6-cli
     volumes:
-      - "prestashop:/var/www/"
+      - prestashop:/var/www/
+    env_file:
+      - env/php.env
+      - env/mysql.env
     environment:
-      PHP_php5enmod: "bcmath mbstring pcntl zip pdo_mysql mysqli opcache gd "
-      PHP__date.timezone: '"Europe/Paris"'
-      PHP__memory_limit: "512M"
-      PHP__file_uploads: "on"
-      PHP__max_file_uploads: "20"
-      PHP__upload_max_filesize: "32M"
-      PHP__max_execution_time: "60"
-      PHP__max_input_time: "180"
-      PHP__opcache.enable: "on"
-      PHP__display_errors: "On"
-      MYSQL_DATABASE: prestashopdb
-      MYSQL_USER: prestashop
-      MYSQL_PASSWORD: pr3stash0p
-      MYSQL_HOST: "mysql-master"
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
       DOMAIN: demo.local
       VIRTUAL_HOST: ${SHOPNAME}.demo.local
-    entrypoint : /bin/bash -xc "sleep 60 ; /entrypoint.sh /var/www/install/index_cli.php --domain=${SHOPNAME}.demo.local --db_server=mysql --db_name=${MYSQL_DATABASE} --db_user=${MYSQL_USER} --db_password=${MYSQL_PASSWORD} --firstname=alter --lastname=way --password=${MYSQL_PASSWORD} --email=admin@alterway.fr --newsletter=0 --send_email=0 ;  chmod -R a+rw /var/www ; rm -rf /var/www/install"
+    entrypoint : /bin/bash -xc "sleep 60 ; /entrypoint.sh /var/www/install/index_cli.php --domain=${SHOPNAME}.demo.local --db_server=${MYSQL_HOST} --db_name=${MYSQL_DATABASE} --db_user=${MYSQL_USER} --db_password=${MYSQL_PASSWORD} --firstname=${PRESTASHOP_FIRSTNAME} --lastname=${PRESTASHOP_LASTNAME} --password=${PRESTASHOP_PASSWORD} --email=${PRESTASHOP_EMAIL} --newsletter=0 --send_email=0 ;  chmod -R a+rw /var/www ; rm -rf /var/www/install"
     networks:
       - mysql-net
     depends_on:
@@ -80,12 +57,13 @@ services:
       - lib_mysql:/bitnami/mysql
     environment:
       - MYSQL_REPLICATION_MODE=master
-      - MYSQL_REPLICATION_USER=replicator
-      - MYSQL_REPLICATION_PASSWORD=r3plicat0r
-      - MYSQL_ROOT_PASSWORD=t00r
-      - MYSQL_USER=prestashop
-      - MYSQL_PASSWORD=pr3stash0p
-      - MYSQL_DATABASE=prestashopdb
+      
+      - MYSQL_REPLICATION_USER
+      - MYSQL_REPLICATION_PASSWORD
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
       - "constraint:node==node01"
     networks:
       - mysql-net
@@ -100,16 +78,18 @@ services:
       - mysql-master
     environment:
       - MYSQL_REPLICATION_MODE=slave
-      - MYSQL_REPLICATION_USER=replicator
-      - MYSQL_REPLICATION_PASSWORD=r3plicat0r
+      - MYSQL_REPLICATION_USER
+      - MYSQL_REPLICATION_PASSWORD
+
       - MYSQL_MASTER_HOST=mysql-master
       - MYSQL_MASTER_PORT=3306
       - MYSQL_MASTER_USER=prestashop
       - MYSQL_MASTER_PASSWORD=pr3stash0p
-      - MYSQL_ROOT_PASSWORD=t00r
-      - MYSQL_USER=prestashop
-      - MYSQL_PASSWORD=pr3stash0p
-      - MYSQL_DATABASE=prestashopdb
+
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
       - "constraint:node==node02"
     networks:
       - mysql-net

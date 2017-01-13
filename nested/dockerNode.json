@@ -111,6 +111,12 @@
         "description":"nodePublicIP"
       }
     },
+    "vars":{
+      "type":"string",
+      "metadata":{
+        "description":"Prestashop variables"
+      }
+    },
     "location":{
       "type":"string",
       "metadata":{
@@ -328,7 +334,7 @@
           ]
         },
         "protectedSettings":{
-          "commandToExecute":"[concat(variables('customScriptNodeCommand'),' \"',add(copyindex(),1), '\" \"',parameters('adminUsername'), '\" \"',parameters('numberOfNodes'),'\" \"',parameters('nodeSubnetRoot'),'\" \"',parameters('nodeVmName'),'\" \"',parameters('hcprivateIPAddress'),'\"')]"
+          "commandToExecute":"[concat(variables('customScriptNodeCommand'),' \"',add(copyindex(),1), '\" \"',parameters('adminUsername'), '\" \"',parameters('numberOfNodes'),'\" \"',parameters('nodeSubnetRoot'),'\" \"',parameters('nodeVmName'),'\" \"',parameters('hcprivateIPAddress'),'\" \"',parameters('vars'),'\"')]"
         }
       }
     },

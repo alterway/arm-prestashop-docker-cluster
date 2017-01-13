@@ -62,6 +62,24 @@
   "nodeVmSize":{
       "value":"Standard_DS1"
   },
+  "mysql_database": {
+    "value": "prestashopdb"
+  },
+  "mysql_user":{
+    "value": "prestashop"
+  },
+  "mysql_password":{
+    "value": "pr3stash0p"
+  },
+  "mysql_root_password":{
+    "value": "t00rp3ssw0rd"
+  },
+  "mysql_replicator_user":{
+    "value": "replicator"
+  },
+  "shopname":{
+    "value": "shop-aw"
+  },
   "location": {
     "value": "northeurope"
   }
