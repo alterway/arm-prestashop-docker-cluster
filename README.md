@@ -6,6 +6,10 @@
 <a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Falterway%2Farm-prestashop-docker-cluster%2Fmaster%2Fazuredeploy.json" target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
+
+**Attention merci de ne pas mettre de $ ou d'espace dans les variables**
+Il n'y a pas d'escaping pour l'instant
+
 <pre>
                                                                                                  
                                                                                                  
