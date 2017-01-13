@@ -7,8 +7,11 @@
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
-**Attention merci de ne pas mettre de $ ou d'espace dans les variables**
-Il n'y a pas d'escaping pour l'instant
+**Attention ! Don't use $ or space in variables **
+
+
+There is no escaping :(
+
 
 <pre>
                                                                                                  
