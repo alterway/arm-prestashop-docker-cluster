@@ -159,9 +159,16 @@ function start_application()
 
   if [ "${INDEX}" = "1" ];then
     NODE1=$(docker node ls | awk '/Leader/ { print $3; }')
-    NODE2=$(docker node ls | grep -v "$NODE1" | grep -v HOSTNAME | awk '{ print $2; }')
+    NODE2=$(docker node ls | grep -v $NODE1 | grep -v HOSTNAME | awk '{ print $2; }')
+    
+    if [ "x$NODE2" = "x" ];then
+       sleep 60
+       NODE2=$(docker node ls | grep -v $NODE1 | grep -v HOSTNAME | awk '{ print $2; }')
+    fi
+
     export NODE1 NODE2
     set_env
+
     docker deploy --compose-file "${ADMIN_HOME}/docker-compose.yml" prestashop
   fi
 }
@@ -226,28 +233,28 @@ function get_var()
 function set_env()
 {
 cat << _EOF_ > "${ADMIN_HOME}/env.sh"
-IP="${IP}"
-ADMIN_HOME="${ADMIN_HOME}"
-HOSTNAME="${HOSTNAME}"
-ADMIN_USER="${ADMIN_USER}"
-INDEX="${INDEX}"
-numberOfNodes="${numberOfNodes}"
-nodeSubnetRoot="${nodeSubnetRoot}"
-IPhc="${IPhc}"
-VARS="${VARS}"
-SHOPNAME="${SHOPNAME}"
-PRESTASHOP_FIRSTNAME="${PRESTASHOP_FIRSTNAME}"
-PRESTASHOP_LASTNAME="${PRESTASHOP_LASTNAME}"
-PRESTASHOP_EMAIL="${PRESTASHOP_EMAIL}"
-PRESTASHOP_PASSWORD="${PRESTASHOP_PASSWORD}"
-MYSQL_DATABASE="${MYSQL_DATABASE}"
-MYSQL_USER="${MYSQL_USER}"
-MYSQL_PASSWORD="${MYSQL_PASSWORD}"
-MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}"
-MYSQL_REPLICATION_USER="${MYSQL_REPLICATION_USER}"
-MYSQL_REPLICATION_PASSWORD="${MYSQL_REPLICATION_PASSWORD}"
-NODE1="${NODE1}"
-NODE2="${NODE2}"
+export IP="${IP}"
+export ADMIN_HOME="${ADMIN_HOME}"
+export HOSTNAME="${HOSTNAME}"
+export ADMIN_USER="${ADMIN_USER}"
+export INDEX="${INDEX}"
+export numberOfNodes="${numberOfNodes}"
+export nodeSubnetRoot="${nodeSubnetRoot}"
+export IPhc="${IPhc}"
+export VARS="${VARS}"
+export SHOPNAME="${SHOPNAME}"
+export PRESTASHOP_FIRSTNAME="${PRESTASHOP_FIRSTNAME}"
+export PRESTASHOP_LASTNAME="${PRESTASHOP_LASTNAME}"
+export PRESTASHOP_EMAIL="${PRESTASHOP_EMAIL}"
+export PRESTASHOP_PASSWORD="${PRESTASHOP_PASSWORD}"
+export MYSQL_DATABASE="${MYSQL_DATABASE}"
+export MYSQL_USER="${MYSQL_USER}"
+export MYSQL_PASSWORD="${MYSQL_PASSWORD}"
+export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}"
+export MYSQL_REPLICATION_USER="${MYSQL_REPLICATION_USER}"
+export MYSQL_REPLICATION_PASSWORD="${MYSQL_REPLICATION_PASSWORD}"
+export NODE1="${NODE1}"
+export NODE2="${NODE2}"
 _EOF_
 }
 
