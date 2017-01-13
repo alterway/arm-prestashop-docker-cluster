@@ -151,16 +151,17 @@ function get_application()
 function start_application()
 {
   # environment
-   MYSQL_REPLICATION_PASSWORD=$(pwgen -1 12 1)
+  MYSQL_REPLICATION_PASSWORD=$(pwgen -1 12 1)
 
-   log "replication password is : ${MYSQL_REPLICATION_PASSWORD}"
+  log "replication password is : ${MYSQL_REPLICATION_PASSWORD}"
 
-   NODE1=$(docker node ls | awk '/Leader/ { print $3; }')
-   NODE2=$(docker node ls | grep -v "$NODE1" | grep -v HOSTNAME | awk '{ print $2; }')
-
-   export MYSQL_REPLICATION_PASSWORD NODE1 NODE2
+  export MYSQL_REPLICATION_PASSWORD
 
   if [ "${INDEX}" = "1" ];then
+    NODE1=$(docker node ls | awk '/Leader/ { print $3; }')
+    NODE2=$(docker node ls | grep -v "$NODE1" | grep -v HOSTNAME | awk '{ print $2; }')
+    export NODE1 NODE2
+    set_env
     docker deploy --compose-file "${ADMIN_HOME}/docker-compose.yml" prestashop
   fi
 }
@@ -330,7 +331,6 @@ install_docker
 install_docker_compose
 activate_swarm
 get_application
-set_env
 start_application
 
 log "Success : End of Execution of Install Script from CustomScript"

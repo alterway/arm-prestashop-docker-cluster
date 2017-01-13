@@ -24,8 +24,8 @@ services:
       - MYSQL_DATABASE
       - MYSQL_USER
       - MYSQL_PASSWORD
-      DOMAIN: demo.local
-      VIRTUAL_HOST: ${SHOPNAME}.demo.local
+      - DOMAIN=demo.local
+      - VIRTUAL_HOST=${SHOPNAME}.demo.local
     networks:
       - mysql-net
 
@@ -40,8 +40,8 @@ services:
       - MYSQL_DATABASE
       - MYSQL_USER
       - MYSQL_PASSWORD
-      DOMAIN: demo.local
-      VIRTUAL_HOST: ${SHOPNAME}.demo.local
+      - DOMAIN=demo.local
+      - VIRTUAL_HOST=${SHOPNAME}.demo.local
     entrypoint : /bin/bash -xc "sleep 60 ; /entrypoint.sh /var/www/install/index_cli.php --domain=${SHOPNAME}.demo.local --db_server=${MYSQL_HOST} --db_name=${MYSQL_DATABASE} --db_user=${MYSQL_USER} --db_password=${MYSQL_PASSWORD} --firstname=${PRESTASHOP_FIRSTNAME} --lastname=${PRESTASHOP_LASTNAME} --password=${PRESTASHOP_PASSWORD} --email=${PRESTASHOP_EMAIL} --newsletter=0 --send_email=0 ;  chmod -R a+rw /var/www ; rm -rf /var/www/install"
     networks:
       - mysql-net
@@ -57,14 +57,14 @@ services:
       - lib_mysql:/bitnami/mysql
     environment:
       - MYSQL_REPLICATION_MODE=master
-      
+
       - MYSQL_REPLICATION_USER
       - MYSQL_REPLICATION_PASSWORD
       - MYSQL_ROOT_PASSWORD
       - MYSQL_USER
       - MYSQL_PASSWORD
       - MYSQL_DATABASE
-      - "constraint:node==node01"
+      - "constraint:node==$NODE1"
     networks:
       - mysql-net
 
@@ -90,7 +90,7 @@ services:
       - MYSQL_USER
       - MYSQL_PASSWORD
       - MYSQL_DATABASE
-      - "constraint:node==node02"
+      - "constraint:node==$NODE2"
     networks:
       - mysql-net
 
