@@ -160,7 +160,7 @@ function start_application()
   if [ "${INDEX}" = "1" ];then
     NODE1=$(docker node ls | awk '/Leader/ { print $3; }')
     NODE2=$(docker node ls | grep -v $NODE1 | grep -v HOSTNAME | awk '{ print $2; }')
-    
+
     if [ "x$NODE2" = "x" ];then
        sleep 60
        NODE2=$(docker node ls | grep -v $NODE1 | grep -v HOSTNAME | awk '{ print $2; }')
@@ -342,7 +342,6 @@ install_docker_compose
 activate_swarm
 get_application
 start_application
-
 log "Success : End of Execution of Install Script from CustomScript"
 
 exit 0
