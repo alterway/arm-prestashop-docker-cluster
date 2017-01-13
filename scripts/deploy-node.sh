@@ -142,6 +142,10 @@ function get_application()
   curl -L "${url}/env/mysql.env" -o "${ADMIN_HOME}/env/mysql.env"
   curl -L "${url}/env/php.env" -o "${ADMIN_HOME}/env/php.env"
   curl -L "${url}/env/php-fpm.env" -o "${ADMIN_HOME}/env/php-fpm.env"
+
+  chown "${ADMIN_USER}" "${ADMIN_HOME}/docker-compose.yml"
+  chown -R "${ADMIN_USER}" "${ADMIN_HOME}/env"
+
 }
 
 function start_application()
@@ -218,6 +222,32 @@ function get_var()
   echo "${var}"
 }
 
+function set_env()
+{
+cat << _EOF_ > "${ADMIN_HOME}/env.sh"
+IP="${IP}"
+ADMIN_HOME="${ADMIN_HOME}"
+HOSTNAME="${HOSTNAME}"
+ADMIN_USER="${ADMIN_USER}"
+INDEX="${INDEX}"
+numberOfNodes="${numberOfNodes}"
+nodeSubnetRoot="${nodeSubnetRoot}"
+IPhc="${IPhc}"
+VARS="${VARS}"
+SHOPNAME="${SHOPNAME}"
+PRESTASHOP_FIRSTNAME="${PRESTASHOP_FIRSTNAME}"
+PRESTASHOP_LASTNAME="${PRESTASHOP_LASTNAME}"
+PRESTASHOP_EMAIL="${PRESTASHOP_EMAIL}"
+PRESTASHOP_PASSWORD="${PRESTASHOP_PASSWORD}"
+MYSQL_DATABASE="${MYSQL_DATABASE}"
+MYSQL_USER="${MYSQL_USER}"
+MYSQL_PASSWORD="${MYSQL_PASSWORD}"
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}"
+MYSQL_REPLICATION_USER="${MYSQL_REPLICATION_USER}"
+_EOF_
+}
+
+
 function activate_swarm()
 {
   if [ "${INDEX}" = "1" ];then
@@ -287,7 +317,7 @@ log "1:$ADMIN_USER 2:$ADMIN_HOME 3:$IP 4:$TERM 5:$INDEX 6:$numberOfNodes 7:$node
 log "CustomScript Directory is ${CWD}"
 
 ##
-env
+env 
 ##
 
 fix_etc_hosts
@@ -300,6 +330,7 @@ install_docker
 install_docker_compose
 activate_swarm
 get_application
+set_env
 start_application
 
 log "Success : End of Execution of Install Script from CustomScript"
